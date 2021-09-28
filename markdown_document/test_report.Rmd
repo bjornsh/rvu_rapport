@@ -63,13 +63,18 @@ title: Resvaneundersökning i `r rapportomrade_rubrik`
 ```{r setup, include=FALSE}
 
   required_packages_list <-  c(
-  "knitr", "kableExtra", "tidyverse", "readxl", "bookdown", "pxweb", "scales", "stringi", "leaflet", "sf", "mapview", "processx", "tinytex", "jsonlite", "htmltools")
+  "knitr", "kableExtra", "tidyverse", "readxl", "bookdown", "pxweb", "scales", "stringi", "leaflet", "sf", "mapview", "processx", "tinytex", "jsonlite", "htmltools", "webshot", "jsontools")
   
   for (pack in required_packages_list){
-    if(pack %in% installed.packages() == FALSE){install.packages(pack)}
-}
+    if(pack %in% installed.packages() == FALSE){install.packages(pack, repos = "http://cran.us.r-project.org")}
+  }
+
 
 lapply(required_packages_list, require, character.only = TRUE)
+update.packages(ask = FALSE, checkBuilt = TRUE, repos = "http://cran.us.r-project.org")
+
+if(is_tinytex() == FALSE){tinytex::install_tinytex()}
+tinytex::tlmgr_update()
 
 inline_hook<-function(x){
   if(is.numeric(x)){
@@ -1512,23 +1517,73 @@ Kollektivtrafiksbarometerns attityd- och resvaneundersökning är en årlig och 
 
 Ur undersökningen har de `r (antal_individer)` respondenter som bor i `r (rapportomrade_text)` valts ut. I Tabell \@ref(tab:svarsfrekvens-table) återfinns befolkning, antal respondenter och andelen svarande av befolkningen. Andelen svarande ska ej förväxlas med svarsfrekvens (hur många av de tillfrågade som valde att svara på enkäten). Respondenternas kön och ålder per område finns redovisade i Tabell \@ref(tab:repondant-table).
 
+```{r resp-over-tid, echo = FALSE, include = FALSE }
+resp_over_tid <- pers %>%
+    select(respondentid, ar.manad) %>%
+    mutate(År = str_sub(ar.manad, 1, 4),
+           Månad_no = str_sub(ar.manad, 5, 6)) %>%
+    mutate(
+        Månad = recode(Månad_no,
+                       '01' = "Januari",
+                       '02' = "Februari",
+                       '03' = "Mars",
+                       '04' = "April",
+                       '05' = "Maj",
+                       '06' = "Juni",
+                       '07' = "Juli",
+                       '08' = "Augusti",
+                       '09' = "September",
+                       '10' = "Oktober",
+                       '11' = "November",
+                       '12' = "December")
+    ) %>%
+    group_by(År, Månad, Månad_no) %>%
+    summarise('Antal respondenter' = n()) %>%
+    arrange(Månad_no) %>%
+    select(-Månad_no)
+
+```
+
+```{r resp-over-tid-table, echo = FALSE, results = "asis"}
+
+kable(resp_over_tid, caption = "Antal respondenter per månad under enkätundersökningens period.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+    kable_styling(latex_options = c("striped", "HOLD_position")) %>%
+    row_spec(0, bold = T) #gör rubrikraden fetstilt)
+
+```
+
 ```{r svarsfrekvens-table, echo = FALSE, results = "asis"}
-kbl(svarsgrad_tabell, caption = "Antal svar jämfört med befolkningen (15-85 år) i respektive område", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+if (nrow(omraden_lagt_underlag) == 0){
+kbl(svarsgrad_tabell, caption = "Antal svar jämfört med befolkningen (15-85 år) i respektive område", booktabs = T,   linesep = "",format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position")) %>%
   row_spec(nrow(svarsgrad_tabell), bold = T) %>% #gör Total-raden fetstilt
   row_spec(0, bold = T) #gör rubrikraden fetstilt
+} else {
+  kbl(svarsgrad_tabell, caption = "Antal svar jämfört med befolkningen (15-85 år) i respektive område", booktabs = T,  linesep = "",format.args = list( big.mark = " ")) %>%
+  kable_styling(latex_options = c("striped", "HOLD_position")) %>%
+  row_spec(nrow(svarsgrad_tabell), bold = T) %>% #gör Total-raden fetstilt
+  row_spec(0, bold = T) %>% #gör rubrikraden fetstilt
+  footnote(symbol = "Baseras på särskilt lågt antal respondenter.")
+}
 ```
 
 `r (text_andel_svarande)` 
 
 ```{r repondant-table, echo = FALSE, results = "asis"}
-#kable(respondenter, caption = "Antal svar per kön och åldersgrupp")
+if (nrow(omraden_lagt_underlag) == 0){
 kbl(respondenter_tabell, caption = "Antal svar per kön och åldersgrupp", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position")) %>%
   row_spec(nrow(respondenter_tabell), bold = T) %>% #gör Total-raden fetstilt
   row_spec(0, bold = T) %>% #gör rubrikraden fetstilt
   column_spec(1:1, width = "2cm")
-
+}else{
+  kbl(respondenter_tabell, caption = "Antal svar per kön och åldersgrupp", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+  kable_styling(latex_options = c("striped", "HOLD_position")) %>%
+  row_spec(nrow(respondenter_tabell), bold = T) %>% #gör Total-raden fetstilt
+  row_spec(0, bold = T) %>% #gör rubrikraden fetstilt
+  column_spec(1:1, width = "2cm") %>%
+  footnote(symbol = "Baseras på särskilt lågt antal respondenter.")
+}
 ```
 Eftersom svarsbenägenheten varierar mellan olika grupper av invånare kan viss skevhet i representationen uppstå, trots att urvalet från början gjorts på ett representativt sätt. Genom att använda en mixad insamlingsmetod, där fysisk post, telefon och sms har använts för att nå respondenterna, har svarsunderlaget kunnat hålla en bättre representativitet än traditionella underskningar. Viktning mot kön, ålder och urvalsområde har därför inte ansetts vara nödvändig.
 
@@ -1549,10 +1604,18 @@ Avgörande för färdmedelsvalet är körkortsinnehav och biltillgång.
 I `r (rapportomrade_text)` hade `r round(körkort_totalt)` procent av respondenterna körkort och `r round(biltillgång_totalt)` procent tillgång till bil. `r (text_korkort)`De som hade tillgång till bil varierade mellan  `r round(min(korkort_bil$"Biltillgång (%)"))` och `r round(max(korkort_bil$"Biltillgång (%)"))` procent. I Tabell \@ref(tab:korkort-bil-table) framgår körkortsinnehav och biltillgång för respektive område.
 
 ```{r korkort-bil-table, echo = FALSE, results = "asis"}
+if(nrow(omraden_lagt_underlag) == 0){
 kbl(korkort_bil_tabell, caption = "Antal respondenter med körkort och biltillgång", booktabs = T, linesep = "",digits=0,format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position")) %>%
   row_spec(nrow(korkort_bil), bold = T) %>% #gör Total-raden fetstilt
   row_spec(0, bold = T) #gör rubrikraden fetstilt
+}else{
+  kbl(korkort_bil_tabell, caption = "Antal respondenter med körkort och biltillgång", booktabs = T, linesep = "",digits=0,format.args = list( big.mark = " ")) %>%
+  kable_styling(latex_options = c("striped", "HOLD_position")) %>%
+  row_spec(nrow(korkort_bil), bold = T) %>% #gör Total-raden fetstilt
+  row_spec(0, bold = T) %>% #gör rubrikraden fetstilt
+  footnote(symbol = "Baseras på särskilt lågt antal respondenter.")
+}
 ```
 
 ## Antal resor
@@ -1795,19 +1858,36 @@ I resdagboken har intervjupersonerna fått fylla i plats för resmål, som spara
 I Tabell \@ref(tab:reslangd-per-omrade-tabell) framgår median, medelvärde, samt totalt antal fordonskilometer per område, respektive färdmedel. I tabellerna exkluderas resor som saknar angivna start- och slutkoordinater, samt de som saknar specifikation om färdmedel. I de fall underlaget är färre än `r tolower(tillräckligt_underlag)` respondenter, utelämnas resultatet.
 
 ```{r reslangd-per-omrade-tabell, echo = FALSE, results = "asis"}
-x <- kbl(reslangd_per_omrade_tabell, digits = 1, longtable = T, booktabs = T, linesep = "",caption = "Reslängd per resa och totalt antal fordonskilometer per område.",format.args = list( big.mark = " ")) %>%
+if(nrow(omraden_lagt_underlag) == 0){
+x <- kbl(reslangd_per_omrade, digits = 1, longtable = T, booktabs = T, linesep = "",caption = "Reslängd per resa och totalt antal fordonskilometer per område.",format.args = list( big.mark = " ")) %>%
   #Captions appear to create problems with longtable package, gives error "mispaced align"
   #See here for solution, but don't know how to implement:
   #https://tex.stackexchange.com/a/205468
   kable_styling(latex_options = c("striped", "HOLD_position", "repeat_header"),
                 repeat_header_text = "\\textit{(fortsättning)}",
                 repeat_header_continued = "\\textit{(Fortsätter på nästa sida...)}") %>%
+  #row_spec(nrow(reslangd_per_omrade_rep), bold = T) %>% #gör Total-raden fetstilt
   row_spec(0, bold = T) %>% #gör rubrikraden fetstilt
   column_spec(2:4, width = "2.5cm") %>%
   column_spec(1:1, width = "3cm") %>%
   column_spec(5:6, width = "1.6cm")
-x
+}else{
+  x <- kbl(reslangd_per_omrade, digits = 1, longtable = T, booktabs = T, linesep = "",caption = "Reslängd per resa och totalt antal fordonskilometer per område.",format.args = list( big.mark = " ")) %>%
+  #Captions appear to create problems with longtable package, gives error "mispaced align"
+  #See here for solution, but don't know how to implement:
+  #https://tex.stackexchange.com/a/205468
+  kable_styling(latex_options = c("striped", "HOLD_position", "repeat_header"),
+                repeat_header_text = "\\textit{(fortsättning)}",
+                repeat_header_continued = "\\textit{(Fortsätter på nästa sida...)}") %>%
+  #row_spec(nrow(reslangd_per_omrade_rep), bold = T) %>% #gör Total-raden fetstilt
+  row_spec(0, bold = T) %>% #gör rubrikraden fetstilt
+  column_spec(2:4, width = "2.5cm") %>%
+  column_spec(1:1, width = "3cm") %>%
+  column_spec(5:6, width = "1.6cm") %>%
+  footnote(symbol = "Baseras på särskilt lågt antal respondenter.")
+}
 ```
+
 ```{r reslangd-per-omrade-text, echo = FALSE, results = "asis"}
 
 # Databearbetning för löptext om \@ref(tab:reslangd-per-omrade-tabell)
@@ -1842,7 +1922,6 @@ x <- kbl(reslangd_summa_ny, digits = 1, longtable = T, booktabs = T, linesep = "
 x
 ```
 
-<<<<<<< HEAD
 ```{r travel_dist-table1, echo = FALSE, results = "asis"}
 # antal_omraden = unique(reslangd_per_omrade_rep$Omrade)
 # 
@@ -1978,6 +2057,7 @@ Andelen resor som genomförs med bil är störst vid `r max_car$avstand` kilomet
 `r round(100*antal_resor_inom/antal_resor_tot_filtrerade)` procent av resorna sker inom `r (rapportomrade_text)`. Den vanligaste förekommande resan inom ett område sker i  `r (max_inom)`, vilket motsvarar `r round(100*max_inom_varde)` procent av resorna. Den vanligaste resan mellan två områden är från `r (max_fran)` till `r (max_till)` med `r round(100*max_till_fran_varde)` procent av resorna. I Tabell \@ref(tab:od-matrix-table) framgår de vanligaste reserelationerna inom `r (rapportomrade_text)` och dess andelar av det totala antalet resorna inom `r (rapportomrade_text)`. Notera att det finns ett bortfall på `r 100-round(100*antal_resor_tot_filtrerade/antal_resor_tot)` procent i underlaget på grund av att vissa resor saknar information om avrese- eller ankomstplats.
 
 ```{r od-matrix-table, echo = FALSE, result="asis"}
+if(nrow(omraden_lagt_underlag) == 0){
 kable(od_matrix_perc, caption = "Fördelning av resorna inom rapportområdet. Radrubrik visar var resar börjar och kolumnrubriker visar var resan slutar.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position"),
                 full_width = TRUE) %>%
@@ -1986,6 +2066,17 @@ kable(od_matrix_perc, caption = "Fördelning av resorna inom rapportområdet. Ra
   column_spec(ncol(od_matrix_perc)+1, bold = T) %>% #gör Total-raden fetstilt
   row_spec(0, bold = T, angle = 45) %>% #gör rubrikraden fetstilt)
   column_spec(1, bold = T, width = "6cm")
+}else{
+  kable(od_matrix_perc, caption = "Fördelning av resorna inom rapportområdet. Radrubrik visar var resar börjar och kolumnrubriker visar var resan slutar.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+  kable_styling(latex_options = c("striped", "HOLD_position"),
+                full_width = TRUE) %>%
+  row_spec(nrow(od_matrix_perc), bold = T) %>% #gör Total-raden fetstilt
+  column_spec(ncol(od_matrix_perc)+1, bold = T) %>% #gör Total-kolumnen fetstilt
+  column_spec(ncol(od_matrix_perc)+1, bold = T) %>% #gör Total-raden fetstilt
+  row_spec(0, bold = T, angle = 45) %>% #gör rubrikraden fetstilt)
+  column_spec(1, bold = T, width = "6cm") %>%
+  footnote(symbol = "Baseras på särskilt lågt antal respondenter.")
+}
 
 ```
 ### Utpendling från `r (rapportomrade_rubrik)`
@@ -2126,10 +2217,11 @@ map_kommun <- st_read("To2018_Swe99TM.shp") %>% #read shapefile and filter
 
 ```{r karta-table, echo=FALSE, results= "asis"}
 
+
 if(omradesniva == "deso"){
 kable(deso_data_table, caption = "Nyckel mellan kod och områden", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
-  kable_styling(latex_options = c("striped", "HOLD_position"),
-                full_width = TRUE)
+  kable_styling(latex_options = c("striped", "HOLD_position")) %>%
+  row_spec(0, bold = T) #gör rubrikraden fetstilt
 }
 
 ```
@@ -2139,6 +2231,7 @@ kable(deso_data_table, caption = "Nyckel mellan kod och områden", booktabs = T,
 Nedan följer tabeller som aver ge en mer detaljerad bild av resvaneundersökningen.
 
 ```{r sys-omrade-table, echo = FALSE, results = "asis"}
+if(nrow(omraden_lagt_underlag) == 0){
 kable(sys_omrade_abs, caption = "Antal resor per resärende och område, redovisat uppräknat på antalet invånare.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position"),
                 full_width = TRUE) %>%
@@ -2146,16 +2239,36 @@ kable(sys_omrade_abs, caption = "Antal resor per resärende och område, redovis
   row_spec(0, bold = T, angle = 45) %>% #gör rubrikraden fetstilt
   column_spec(ncol(sys_omrade_abs), bold = T) %>%
   column_spec(1, width = "3cm", bold = T)
+}else{
+  kable(sys_omrade_abs, caption = "Antal resor per resärende och område, redovisat uppräknat på antalet invånare.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+  kable_styling(latex_options = c("striped", "HOLD_position"),
+                full_width = TRUE) %>%
+  row_spec(nrow(sys_omrade_abs), bold = T) %>% #gör Total-raden fetstilt
+  row_spec(0, bold = T, angle = 45) %>% #gör rubrikraden fetstilt
+  column_spec(ncol(sys_omrade_abs), bold = T) %>%
+  column_spec(1, width = "3cm", bold = T) %>%
+  footnote(symbol = "Baseras på särskilt lågt antal respondenter.")
+}
 
 ```
 
 ```{r sys-omrade-percent-table, echo = FALSE, results = "asis"}
+if(nrow(omraden_lagt_underlag) == 0){
 kable(sys_omrade_percent, caption = "Resärende per område, redovisat i andelar uttryckt i procent per område.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position"),
                 full_width = TRUE) %>%
   row_spec(nrow(sys_omrade_percent), bold = T) %>% #gör Total-raden fetstilt
   row_spec(0, bold = T, angle = 45) %>% #gör rubrikraden fetstilt
   column_spec(1,width = "3cm", bold = T)
+}else{
+  kable(sys_omrade_percent, caption = "Resärende per område, redovisat i andelar uttryckt i procent per område.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+  kable_styling(latex_options = c("striped", "HOLD_position"),
+                full_width = TRUE) %>%
+  row_spec(nrow(sys_omrade_percent), bold = T) %>% #gör Total-raden fetstilt
+  row_spec(0, bold = T, angle = 45) %>% #gör rubrikraden fetstilt
+  column_spec(1,width = "3cm", bold = T) %>%
+  footnote(symbol = "Baseras på särskilt lågt antal respondenter.")
+}
 ```
 
 
@@ -2184,6 +2297,7 @@ drivers_license_area <- pers %>%
 ```
 
 ```{r drivers-license-area-table, echo = FALSE, results = "asis"}
+if(nrow(omraden_lagt_underlag) == 0){
 kable(drivers_license_area, caption = "Körkortsinnehav per område, redovisat uppräknat på antalet invånare samt i andelar uttryckt i procent.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position"),
                 full_width = TRUE) %>%
@@ -2191,6 +2305,16 @@ kable(drivers_license_area, caption = "Körkortsinnehav per område, redovisat u
   row_spec(0, bold = T) %>% #gör rubrikraden fetstilt
   column_spec(1, bold = T, width = "3cm") %>%
   column_spec(2:4, width = "1.5cm")
+}else{
+  kable(drivers_license_area, caption = "Körkortsinnehav per område, redovisat uppräknat på antalet invånare samt i andelar uttryckt i procent.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+  kable_styling(latex_options = c("striped", "HOLD_position"),
+                full_width = TRUE) %>%
+  row_spec(nrow(drivers_license_area), bold = T) %>% #gör Total-raden fetstilt
+  row_spec(0, bold = T) %>% #gör rubrikraden fetstilt
+  column_spec(1, bold = T, width = "3cm") %>%
+  column_spec(2:4, width = "1.5cm") %>%
+  footnote(symbol = "Baseras på särskilt lågt antal respondenter.")
+}
 ```
 
 ```{r bildisposition, echo=FALSE, include = FALSE}
@@ -2233,6 +2357,7 @@ Totalt = Befolkning) %>%
 ```
 
 ```{r bildisposition-table, echo = FALSE, results = "asis"}
+if(nrow(omraden_lagt_underlag) == 0){
 kable(trip_sys_mode_abs, caption = "Bildisposition per område, redovisat uppräknat på antalet invånare.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position"),
                 full_width = TRUE) %>%
@@ -2240,15 +2365,36 @@ kable(trip_sys_mode_abs, caption = "Bildisposition per område, redovisat upprä
   row_spec(0, bold = T) %>% #gör rubrikraden fetstilt)
   column_spec(ncol(trip_sys_mode_abs), bold = T) %>%
   column_spec(1, bold = T, width = "3cm")
+}else{
+  kable(trip_sys_mode_abs, caption = "Bildisposition per område, redovisat uppräknat på antalet invånare.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+  kable_styling(latex_options = c("striped", "HOLD_position"),
+                full_width = TRUE) %>%
+  row_spec(nrow(trip_sys_mode_abs), bold = T) %>% #gör Total-raden fetstilt
+  row_spec(0, bold = T) %>% #gör rubrikraden fetstilt)
+  column_spec(ncol(trip_sys_mode_abs), bold = T) %>%
+  column_spec(1, bold = T, width = "3cm") %>%
+  footnote(symbol = "Baseras på särskilt lågt antal respondenter.")
+}
 
 ```
+
 ```{r trip-sys-mode-percent-table, echo = FALSE, results = "asis"}
+if(nrow(omraden_lagt_underlag) == 0){
 kable(trip_sys_mode_percent, caption = "Bilinnehav per område, redovisat i andelar uttryckt i procent.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position"),
                 full_width = TRUE) %>%
   row_spec(nrow(trip_sys_mode_percent), bold = T) %>% #gör Total-raden fetstilt
   row_spec(0, bold = T) %>% #gör rubrikraden fetstilt)
   column_spec(1, bold = T, width = "3cm")
+}else{
+  kable(trip_sys_mode_percent, caption = "Bilinnehav per område, redovisat i andelar uttryckt i procent.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+  kable_styling(latex_options = c("striped", "HOLD_position"),
+                full_width = TRUE) %>%
+  row_spec(nrow(trip_sys_mode_percent), bold = T) %>% #gör Total-raden fetstilt
+  row_spec(0, bold = T) %>% #gör rubrikraden fetstilt)
+  column_spec(1, bold = T, width = "3cm") %>%
+  footnote(symbol = "Baseras på särskilt lågt antal respondenter.")
+}
 ```
 
 ```{r mode-age-table, echo = FALSE, results = "asis"}
@@ -2286,6 +2432,7 @@ kbl(trip_mode_gender_percent, caption = "Färdmedel per kön, redovisat i andela
 ```
 
 ```{r trips-mode-table, echo = FALSE, results = "asis"}
+if(nrow(omraden_lagt_underlag) == 0){
 kbl(trip_mode_abs, digits = 0, caption = "Färdmedelsandelar per område, redovisat uppräknat på antalet invånare.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position"),
                 full_width = TRUE) %>%
@@ -2293,15 +2440,34 @@ kbl(trip_mode_abs, digits = 0, caption = "Färdmedelsandelar per område, redovi
   row_spec(0, bold = T) %>% #gör rubrikraden fetstilt
   column_spec(ncol(trip_mode_abs), bold = T) %>%
   column_spec(1, width = "2.5cm", bold = T)
+}else{
+  kbl(trip_mode_abs, digits = 0, caption = "Färdmedelsandelar per område, redovisat uppräknat på antalet invånare.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+  kable_styling(latex_options = c("striped", "HOLD_position"),
+                full_width = TRUE) %>%
+  row_spec(nrow(trip_mode_abs), bold = T) %>% #gör Total-raden fetstilt
+  row_spec(0, bold = T) %>% #gör rubrikraden fetstilt
+  column_spec(ncol(trip_mode_abs), bold = T) %>%
+  column_spec(1, width = "2.5cm", bold = T) %>%
+  footnote(symbol = "Baseras på särskilt lågt antal respondenter.")
+  }
 
 ```
 
 ```{r trips-mode-percent-table, echo = FALSE, results = "asis"}
+if(nrow(omraden_lagt_underlag) == 0){
 kbl(trip_mode_percent, caption = "Antal resor per färdmedel och område, redovisat i andelar uttryckt i procent.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position")) %>%
   row_spec(nrow(trip_mode_percent), bold = T) %>% #gör Total-raden fetstilt
   row_spec(0, bold = T) %>% #gör rubrikraden fetstilt)
   column_spec(1, bold = T)
+}else{
+  kbl(trip_mode_percent, caption = "Antal resor per färdmedel och område, redovisat i andelar uttryckt i procent.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+  kable_styling(latex_options = c("striped", "HOLD_position")) %>%
+  row_spec(nrow(trip_mode_percent), bold = T) %>% #gör Total-raden fetstilt
+  row_spec(0, bold = T) %>% #gör rubrikraden fetstilt)
+  column_spec(1, bold = T) %>%
+  footnote(symbol = "Baseras på särskilt lågt antal respondenter.")
+}
 ```
 
 ```{r trip_purpose_area, echo=FALSE, include = FALSE}
@@ -2351,6 +2517,7 @@ Totalt = Befolkning) %>%
 ```
 
 ```{r trip-purpose-area-table, echo = FALSE, results = "asis"}
+if(nrow(omraden_lagt_underlag) == 0){
 kable(trip_purpose_area_abs, caption = "Antal resor per resärende och område, redovisat uppräknat på antalet invånare.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position"),
                 full_width = TRUE) %>%
@@ -2358,16 +2525,36 @@ kable(trip_purpose_area_abs, caption = "Antal resor per resärende och område, 
   row_spec(0, bold = T, angle = 45) %>% #gör rubrikraden fetstilt
   column_spec(ncol(trip_purpose_area_abs), bold = T) %>%
   column_spec(1, width = "1.2cm", bold = T)
+}else{
+  kable(trip_purpose_area_abs, caption = "Antal resor per resärende och område, redovisat uppräknat på antalet invånare.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+  kable_styling(latex_options = c("striped", "HOLD_position"),
+                full_width = TRUE) %>%
+  row_spec(nrow(trip_purpose_area_abs), bold = T) %>% #gör Total-raden fetstilt
+  row_spec(0, bold = T, angle = 45) %>% #gör rubrikraden fetstilt
+  column_spec(ncol(trip_purpose_area_abs), bold = T) %>%
+  column_spec(1, width = "1.2cm", bold = T) %>%
+  footnote(symbol = "Baseras på särskilt lågt antal respondenter.")
+}
 
 ```
 
 ```{r trip-purpose-area-percent-table, echo = FALSE, results = "asis"}
+if(nrow(omraden_lagt_underlag) == 0){
 kable(trip_purpose_area_percent, caption = "Resärende per område, redovisat i andelar uttryckt i procent per område.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position"),
                 full_width = TRUE) %>%
   row_spec(nrow(trip_purpose_area_percent), bold = T) %>% #gör Total-raden fetstilt
   row_spec(0, bold = T, angle = 45) %>% #gör rubrikraden fetstilt
   column_spec(1,width = "2.5cm", bold = T)
+}else{
+kable(trip_purpose_area_percent, caption = "Resärende per område, redovisat i andelar uttryckt i procent per område.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+  kable_styling(latex_options = c("striped", "HOLD_position"),
+                full_width = TRUE) %>%
+  row_spec(nrow(trip_purpose_area_percent), bold = T) %>% #gör Total-raden fetstilt
+  row_spec(0, bold = T, angle = 45) %>% #gör rubrikraden fetstilt
+  column_spec(1, width = "2.5cm", bold = T) %>%
+  footnote(symbol = "Baseras på särskilt lågt antal respondenter.")
+}
 ```
 
 ```{r distance_mode, echo=FALSE, include=FALSE}
