@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2021/W32TeX) (preloaded format=pdflatex 2021.9.20)  28 SEP 2021 13:14
+This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2021/W32TeX) (preloaded format=pdflatex 2021.9.20)  28 SEP 2021 14:58
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1381,7 +1381,7 @@ Here is how much of TeX's memory you used:
  29717 multiletter control sequences out of 15000+600000
  462056 words of font info for 70 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 60i,17n,66p,782b,561s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 60i,17n,66p,782b,563s stack positions out of 5000i,500n,10000p,200000b,80000s
 pdfTeX warning (dest): name{Hfootnote.4} has been referenced but does not exi
 st, replaced by a fixed one
 
@@ -1405,7 +1405,7 @@ ing/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr6.pfb><c:/Users/SETK21602/AppDa
 ta/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb><c:/Users/SETK2160
 2/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr8.pfb><c:/Users/S
 ETK21602/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb>
-Output written on test_report.pdf (25 pages, 481553 bytes).
+Output written on test_report.pdf (25 pages, 478119 bytes).
 PDF statistics:
  429 PDF objects out of 1000 (max. 8388607)
  360 compressed objects within 4 object streams

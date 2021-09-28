@@ -469,7 +469,7 @@ resor_per_omrade_fardmedel <- reslangd %>% #Resor per individ blir överskattat 
   select(Omrade,Totalt_antal_resor)
 
 #Skapar kolumner med median, medel osv.
-reslangd_per_omrade_ny <- reslangd %>%
+reslangd_per_omrade <- reslangd %>%
   select(-one_of("Omrade_kod")) %>%
   group_by(Omrade) %>% #`summarise()` has grouped output by 'Omrade'. You can override using the `.groups` argument.???
   summarise("Median" = round(median(avstand),0), "Medel" = round(mean(avstand),1), "Antal_observationer" = n()) %>%
@@ -480,33 +480,7 @@ reslangd_per_omrade_ny <- reslangd %>%
 #Antalet observationer som krävs för att data ska visas (global parameter)
 tillräckligt_underlag <- 5
 
-# #Döljer värden som inte ska visas
-# reslangd_per_område <- reslangd_per_område %>%
-#   mutate(Median= ifelse(Antal_observationer < tillräckligt_underlag, NA, Median)) %>%
-#   mutate(Medel= ifelse(Antal_observationer < tillräckligt_underlag, NA, Medel)) %>%
-#   mutate(Totalt_antal_resor= ifelse(Antal_observationer < tillräckligt_underlag, NA, Totalt_antal_resor)) %>%
-#   mutate(Trafikarbete_totalt= ifelse(Antal_observationer < tillräckligt_underlag, NA, Trafikarbete_totalt))
-
-# reslangd_per_omrade_rep <- crossing(unique(reslangd$Omrade), unique(reslangd$Färdmedel)) %>% #creating combination of all Omrade and Färdmedel to have all rows in the table
-#   rename(Omrade = "unique(reslangd$Omrade)",
-#          Färdmedel = "unique(reslangd$Färdmedel)") %>%
-#   left_join(reslangd_per_område, by = c("Omrade", "Färdmedel")) %>%
-#   rbind(reslangd_summa) %>%
-#   rbind(reslangd_summa_tot) %>%
-#   mutate(
-#     Omrade = ifelse(is.na(Omrade), "Ej angivet", Omrade),
-#     Färdmedel = Färdmedel,
-#     Median = ifelse(is.na(Median), "-", round(Median/1000)),
-#     Medel = ifelse(is.na(Medel), "-", round(Medel/1000)),
-#     "Totalt antal resor" = ifelse(is.na(Totalt_antal_resor), "-", round(Totalt_antal_resor/100)*100),
-#     "Totalt antal fordonskilometer" = ifelse(is.na(Trafikarbete_totalt), "-", round(Trafikarbete_totalt/1000)),
-#     "Antal observationer" = ifelse(is.na(Antal_observationer), 0, Antal_observationer)
-#   ) %>%
-#   select(-Antal_observationer,-Totalt_antal_resor,-Trafikarbete_totalt)
-
-##Alternativ till den ovan##
-reslangd_per_omrade_ny <- reslangd_per_omrade_ny %>%
-  mutate(Omrade = ifelse(Omrade %in% omraden_lagt_underlag$Omrade,paste0(Omrade,"*"),Omrade)) %>%
+reslangd_per_omrade <- reslangd_per_omrade %>%
   mutate(
     Omrade = ifelse(is.na(Omrade), "Ej angivet", Omrade),
     Median = ifelse(is.na(Median), "-", round(Median/1000)),
@@ -517,6 +491,9 @@ reslangd_per_omrade_ny <- reslangd_per_omrade_ny %>%
   ) %>%
   select(-Antal_observationer,-Totalt_antal_resor,-Trafikarbete_totalt) %>%
   rename(Område = Omrade)
+
+reslangd_per_omrade_tabell <- reslangd_per_omrade %>%
+  mutate(Område = ifelse(Område %in% omraden_lagt_underlag$Omrade,paste0(Område,"*"),Område))
 
  reslangd_summa_ny <- reslangd_summa %>%
   mutate(
@@ -665,8 +642,6 @@ od_matrix <- rvu %>%
     select(start_omrade_namn, stop_omrade_namn) %>%
     filter(!is.na(start_omrade_namn)) %>%
     filter(!is.na(stop_omrade_namn)) %>%
-    mutate(start_omrade_namn = ifelse(start_omrade_namn %in% omraden_lagt_underlag$Omrade,paste0(start_omrade_namn,"*"),start_omrade_namn)) %>%
-    mutate(stop_omrade_namn = ifelse(stop_omrade_namn %in% omraden_lagt_underlag$Omrade,paste0(stop_omrade_namn,"*"),stop_omrade_namn)) %>%
     group_by(start_omrade_namn, stop_omrade_namn) %>%
     summarize(antal = n()) %>%
     pivot_wider(names_from = stop_omrade_namn, values_from = antal, values_fill = 0) %>%
@@ -742,8 +717,13 @@ max_2 <- which(od_matrix_plain_mellan == max_2_inom_varde, arr.ind = TRUE)
 max_2_inom <- rownames(od_matrix_plain)[max_2[1]]
 
 
-#Skapar procent-matris
-od_matrix_perc <- mutate(od_matrix_andelar,across(where(is.numeric), ~percent(.x, accuracy = 1))) #Skapar tabell med procent
+#Skapar procent-matris och lägger på asterisker om det är ett för litet urval
+od_matrix_perc <- mutate(od_matrix_andelar,across(where(is.numeric), ~percent(.x, accuracy = 1))) %>%
+  rename_with(~str_c(.,"*"), omraden_lagt_underlag$Omrade) %>%
+  rownames_to_column('Område') %>%
+  mutate(Område = ifelse(Område %in% omraden_lagt_underlag$Omrade,paste0(Område,"*"),Område)) %>%
+  `rownames<-`(.[,1]) %>% #skapar indexkolumn
+  select(!(Område))
 
 #Räknar totalt antal resor inom området
 antal_resor_tot <- nrow(rvu)
@@ -1023,7 +1003,7 @@ trip_age_andel <- trip_age %>%
   mutate(across(where(is.numeric), ~ . / Totalt)) %>% #dividerar till procent av respondenter
   select(!Totalt)
 
-#FLAG, funkar inte
+#Funkar inte!
 max_bike_age <- get_trip(trip_age_andel, "max", "Cykel")
 max_car_age <- get_trip(trip_age_andel, "max", "Bil")
 max_bus_age <- get_trip(trip_age_andel, "max", "Buss")
@@ -1556,7 +1536,6 @@ x <- kbl(num_trips_rep, digits = 1, longtable = T, booktabs = T, linesep = "",ca
   kable_styling(latex_options = c("striped", "HOLD_position", "repeat_header"),
                 repeat_header_text = "\\textit{(fortsättning)}",
                 repeat_header_continued = "\\textit{(Fortsätter på nästa sida...)}") %>%
-  #row_spec(nrow(reslangd_per_omrade_rep), bold = T) %>% #gör Total-raden fetstilt
   row_spec(0, bold = T) %>% #gör rubrikraden fetstilt
   column_spec(2:4, width = "2.5cm") %>%
   column_spec(1:1, width = "2cm") %>%
@@ -1786,14 +1765,13 @@ I resdagboken har intervjupersonerna fått fylla i plats för resmål, som spara
 I Tabell \@ref(tab:reslangd-per-omrade-tabell) framgår median, medelvärde, samt totalt antal fordonskilometer per område, respektive färdmedel. I tabellerna exkluderas resor som saknar angivna start- och slutkoordinater, samt de som saknar specifikation om färdmedel. I de fall underlaget är färre än `r tolower(tillräckligt_underlag)` respondenter, utelämnas resultatet.
 
 ```{r reslangd-per-omrade-tabell, echo = FALSE, results = "asis"}
-x <- kbl(reslangd_per_omrade_ny, digits = 1, longtable = T, booktabs = T, linesep = "",caption = "Reslängd per resa och totalt antal fordonskilometer per område.",format.args = list( big.mark = " ")) %>%
+x <- kbl(reslangd_per_omrade_tabell, digits = 1, longtable = T, booktabs = T, linesep = "",caption = "Reslängd per resa och totalt antal fordonskilometer per område.",format.args = list( big.mark = " ")) %>%
   #Captions appear to create problems with longtable package, gives error "mispaced align"
   #See here for solution, but don't know how to implement:
   #https://tex.stackexchange.com/a/205468
   kable_styling(latex_options = c("striped", "HOLD_position", "repeat_header"),
                 repeat_header_text = "\\textit{(fortsättning)}",
                 repeat_header_continued = "\\textit{(Fortsätter på nästa sida...)}") %>%
-  #row_spec(nrow(reslangd_per_omrade_rep), bold = T) %>% #gör Total-raden fetstilt
   row_spec(0, bold = T) %>% #gör rubrikraden fetstilt
   column_spec(2:4, width = "2.5cm") %>%
   column_spec(1:1, width = "3cm") %>%
@@ -1806,10 +1784,10 @@ x
 #Daniel
 
 
-area_shortest_trips <-  get_trip(reslangd_per_omrade_ny, "min", "Median") # området med kortast medianresa
-area_longest_trips <-  get_trip(reslangd_per_omrade_ny, "max", "Median") # området med längst medianresa
-area_max_fk <-  get_trip(reslangd_per_omrade_ny, "max", "Totalt antal fordonskilometer") # området med längst medianresa
-area_min_fk <-  get_trip(reslangd_per_omrade_ny, "min", "Totalt antal fordonskilometer") # området med längst 
+area_shortest_trips <-  get_trip(reslangd_per_omrade, "min", "Median") # området med kortast medianresa
+area_longest_trips <-  get_trip(reslangd_per_omrade, "max", "Median") # området med längst medianresa
+area_max_fk <-  get_trip(reslangd_per_omrade, "max", "Totalt antal fordonskilometer") # området med längst medianresa
+area_min_fk <-  get_trip(reslangd_per_omrade, "min", "Totalt antal fordonskilometer") # området med längst 
 
 ```
 
@@ -1829,45 +1807,12 @@ x <- kbl(reslangd_summa_ny, digits = 1, longtable = T, booktabs = T, linesep = "
   kable_styling(latex_options = c("striped", "HOLD_position", "repeat_header"),
                 repeat_header_text = "\\textit{(fortsättning)}",
                 repeat_header_continued = "\\textit{(Fortsätter på nästa sida...)}") %>%
-  #row_spec(nrow(reslangd_per_omrade_rep), bold = T) %>% #gör Total-raden fetstilt
   row_spec(0, bold = T) %>% #gör rubrikraden fetstilt
   column_spec(2:4, width = "2.5cm") %>%
   column_spec(1:1, width = "3cm") %>%
   column_spec(5:6, width = "1.6cm")
 x
 ```
-
-```{r travel_dist-table1, echo = FALSE, results = "asis"}
-# antal_omraden = unique(reslangd_per_omrade_rep$Omrade)
-# 
-# reslangd_per_omrade_rep <- reslangd_per_omrade_rep %>%
-#   select(-Omrade)
-# 
-# x <- kbl(reslangd_per_omrade_rep, longtable = T, booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
-#   #Captions appear to create problems with longtable package, gives error "mispaced align"
-#   #See here for solution, but don't know how to implement:
-#   #https://tex.stackexchange.com/a/205468
-#   kable_styling(latex_options = c("striped", "HOLD_position", "repeat_header"),
-#                 repeat_header_text = "\\textit{(fortsättning)}",
-#                 repeat_header_continued = "\\textit{(Fortsätter på nästa sida...)}") %>%
-#   row_spec(nrow(reslangd_per_omrade_rep), bold = T) %>% #gör Total-raden fetstilt
-#   row_spec(0, bold = T) #gör rubrikraden fetstilt
-# 
-# for (i in c(1:(length(antal_omraden)-1))){
-#   x <- x %>%
-#     pack_rows(antal_omraden[i], (i-1)*5+1, (i-1)*5+5,
-#               hline_after = TRUE)
-# }
-# 
-# x <- x %>%
-#   pack_rows("Alla", (length(antal_omraden)-1)*5+1, (length(antal_omraden)-1)*5 + 6,
-#             hline_after = TRUE,
-#             hline_before = TRUE)
-# 
-# x
-
-```
-
 
 ```{r travel_share-calc, echo = FALSE, results = "asis"}
 # Daniel
