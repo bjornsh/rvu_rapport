@@ -1009,10 +1009,6 @@ trip_age_andel <- trip_age %>%
   mutate(across(where(is.numeric), ~ . / Totalt)) %>% #dividerar till procent av respondenter
   select(!Totalt)
 
-<<<<<<< HEAD
-=======
-#Funkar inte!
->>>>>>> 928a612c2e5d5c94225dda06aaf8a7c82aa3c05f
 max_bike_age <- get_trip(trip_age_andel, "max", "Cykel")
 max_car_age <- get_trip(trip_age_andel, "max", "Bil")
 max_bus_age <- get_trip(trip_age_andel, "max", "Buss")
@@ -1879,7 +1875,6 @@ x
 ```
 
 
-=======
 ```{r travel_share-calc, echo = FALSE, results = "asis"}
 # Daniel
 max_car <- get_trip(temp_plot, "max", "Andel")
@@ -1892,8 +1887,6 @@ max_bike <- bike[which.max(bike$Andel),]
 
 
 Andelen resor som genomförs med bil är störst vid `r max_car$avstand` kilometer. Andelen resor med tåg är störst vid `r max_train$avstand`. Cykelandelen är som högst för resor på ca `r max_bike$avstand` km och sjunker sedan successivt med ökat avstånd.
-
->>>>>>> 928a612c2e5d5c94225dda06aaf8a7c82aa3c05f
 
 Nedan följer ett diagram som visar färdmedelsfördelnjing per reslängd.
 
@@ -1966,7 +1959,7 @@ avstand_plot
 ```
 
 
-```{r travel_share-calc, echo = FALSE, results = "asis"}
+```{r travel_share-calc_, echo = FALSE, results = "asis"}
 
 max_car <- get_trip(temp_plot, "max", "Andel")
 max_train  <- which.max(subset(temp_plot, Färdmedel=="Tåg")$Andel)
