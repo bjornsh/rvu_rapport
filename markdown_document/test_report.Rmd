@@ -1018,9 +1018,9 @@ trip_age_andel <- trip_age %>%
   mutate(across(where(is.numeric), ~ . / Totalt)) %>% #dividerar till procent av respondenter
   select(!Totalt)
 
-max_bike_age <- get_trip(trip_age_andel, "max", "Cykel")
-max_car_age <- get_trip(trip_age_andel, "max", "Bil")
-max_bus_age <- get_trip(trip_age_andel, "max", "Buss")
+max_bike_age <- get_trip(trip_age_andel, "max", "Cykel")*100
+max_car_age <- get_trip(trip_age_andel, "max", "Bil")*100
+max_bus_age <- get_trip(trip_age_andel, "max", "Buss")*100
 
 ```
 ```{r korkort, echo=FALSE, include=FALSE}
@@ -1358,10 +1358,10 @@ bike_share_work <- round(trip_purpose_mode_andel_koll["Arbete (till jobbet)", "C
 trips_to_work_share <- trips_total_shares_errand["Arbete (till jobbet)","Totalt"] # andel arbetsresor 
 trips_to_home_share <- trips_total_shares_errand["Hemresa/till bostaden","Totalt"] # andel resor till hemmet
 
-mest_bil <- rownames(trip_purpose_mode_andel_df)[which.max(trip_purpose_mode_andel_df$Bil)]
-mest_bil_andel <- max(trip_purpose_mode_andel_df$Bil)
-minst_bil <- rownames(trip_purpose_mode_andel_df)[which.min(trip_purpose_mode_andel_df$Bil)]
-minst_bil_andel <- min(trip_purpose_mode_andel_df$Bil)
+mest_bil_syfte <- rownames(trip_purpose_mode_andel_df)[which.max(trip_purpose_mode_andel_df$Bil)]
+mest_bil__syfte_andel <- max(trip_purpose_mode_andel_df$Bil)
+minst_bil_syfte <- rownames(trip_purpose_mode_andel_df)[which.min(trip_purpose_mode_andel_df$Bil)]
+minst_bil__syfte_andel <- min(trip_purpose_mode_andel_df$Bil)
 
 istallet_for_bil <- ifelse(trip_purpose_mode_andel_df[minst_bil,"Kollektivtrafik"] > trip_purpose_mode_andel_df[minst_bil,"Cykel"],"Kollektivtrafik","Cykel")
 istallet_for_bil_andel <- trip_purpose_mode_andel_df[minst_bil,istallet_for_bil]
@@ -1431,23 +1431,33 @@ reslangd_barplot <- ggplot(reslangd_per_fardmedel, aes(factor(Färdmedel, level 
 reslangd_barplot
 ```
 
+```{r}
+bike_share_text <- function(share_bike_men, share_bike_women) {
+   if(share_bike_men<share_bike_women){
+     text_ <- "Kvinnor cyklar i större utsträckning än män"
+   }
+  else if(share_bike_men>share_bike_women){
+    "Män cyklar i större utsträckning än kvinnor"
+  }
+  else{"Kvinnor och män cyklar i samma utsträckning"}
+}
+```
 
 
 ## Fördelning mellan män och kvinnor
 
-Män och kvinnor gör ungefär lika många resor per person och dag, `r num_trips_men ` respektive `r num_trips_women`. Män använder bil i högre utsträckning än kvinnor, `r share_care_men*100` procent jämfört med `r share_care_women*100` procent. Kvinnor färdas i störra utsträckning med kollektivtrafik än män `r share_transit_women`, respektive `r share_transit_men` procent. Kvinnor och män cyklar i ungefär lika stor utsträckning, `r share_bike_women` procent respektive `r share_bike_men` procent.
+Män och kvinnor gör ungefär lika många resor per person och dag, `r num_trips_gender ` respektive `r num_trips_women`. Män använder bil i högre utsträckning än kvinnor, `r share_care_men*100` procent jämfört med `r share_care_women*100` procent. Kvinnor färdas i störra utsträckning med kollektivtrafik än män `r share_transit_women`, respektive `r share_transit_men` procent. Kvinnor cyklar i större utsträckning än män, `r share_bike_women` procent respektive `r share_bike_men` procent.
 
 
 
 
 ## Fördelning mellan ålderskategorier
 
-<!-- <Exempeltext> <Gör denna sist! Utgå ifrån Färdsätt efter ålder> -->
-Andelen cykelresor är högst i åldersgruppen `r max_bike_age$Ålder` år, där `r `r max_bike_age$Andel*100 ` procent av resorna utförs med cykel. Andelen bilresor ökar med stigande ålder och är högst i ålderskategorin `r max_car_age$Ålder` år, där `r max_car_age$Andel*100` procent av resorna utfördes med bil. Den högsta andelen bussresor är i ålderskategorin `r max_bus_age$Ålder` år där `r max_bus_age$Andel*100` procent av resorna utförs med buss. 
+Andelen cykelresor är högst i åldersgruppen `r max_bike_age$Ålder` år, där `r max_bike_age$Cykel` procent av resorna utförs med cykel. Andelen bilresor ökar med stigande ålder och är högst i ålderskategorin `r max_car_age$Ålder` år, där `r max_car_age$Bil` procent av resorna utfördes med bil. Den högsta andelen bussresor är i ålderskategorin `r max_bus_age$Ålder` år där `r max_bus_age$Bus` procent av resorna utförs med buss. 
 
 
 ## Vanligaste målpunkterna
-<!-- <Exempeltext> <Gör denna sist! Utgå ifrån 3.5.1 och 3.5.2> -->
+
 Den vanligaste förekommande resan oavsett färdsätt inom ett område sker inom `r max_inom` följt av `r max_2_inom`. Mellan två områden är den vanligaste förekommande reserelationen mellan `r max_fran`-`r max_till ` följt av relationen `r max_2_fran`-`r max_2_till `
 
 
@@ -1499,7 +1509,7 @@ kbl(respondenter_tabell, caption = "Antal svar per kön och åldersgrupp", bookt
 ```
 Eftersom svarsbenägenheten varierar mellan olika grupper av invånare kan viss skevhet i representationen uppstå, trots att urvalet från början gjorts på ett representativt sätt. Genom att använda en mixad insamlingsmetod, där fysisk post, telefon och sms har använts för att nå respondenterna, har svarsunderlaget kunnat hålla en bättre representativitet än traditionella underskningar. Viktning mot kön, ålder och urvalsområde har därför inte ansetts vara nödvändig.
 
-Notera antalet respondenter per område. För att säkra slutsatser ska kunna dras om en grupp respondenter behövs över  `r lagt_underlag` respondenter. I områden med mycket litet antal respondenter kan det vara problematiskt att dra genrerella slutsatser. Resultat för områden med få antal respondenter nedan i resultatavsnittet bör tas med försiktighet. `r ifelse(nrow(omraden_lagt_underlag)>0,paste0("I tabellerna har områden med särskilt lågt underlag markerats med asterisk. Till exempel har området ",slice(respondenter,which.min(Respondenter))$Omrade," enbart ",slice(respondenter,which.min(Respondenter))$Respondenter, " respondenter. "),"")` `r ifelse(nrow(respondentgrupper_lagt_underlag)>0,paste0("Även när data delas in i exempelvis åldersgrupper kan urvalet vara problematiskt lågt. Åldersgrupp ",respondentgrupper_lagt_underlag_text," har väldigt lågt underlag, vilket bör beaktas i analysen. "),"")`
+Notera antalet respondenter per område. För att säkra slutsatser ska kunna dras krävs minst  `r lagt_underlag` respondenter. I områden med mycket litet antal respondenter kan det vara problematiskt att dra genrerella slutsatser. Resultat för områden med få antal respondenter nedan i resultatavsnittet bör tas med försiktighet. `r ifelse(nrow(omraden_lagt_underlag)>0,paste0("I tabellerna har områden med särskilt lågt underlag markerats med asterisk. Till exempel har området ",slice(respondenter,which.min(Respondenter))$Omrade," enbart ",slice(respondenter,which.min(Respondenter))$Respondenter, " respondenter. "),"")` `r ifelse(nrow(respondentgrupper_lagt_underlag)>0,paste0("Även när data delas in i exempelvis åldersgrupper kan urvalet vara problematiskt lågt. Åldersgrupp ",respondentgrupper_lagt_underlag_text," har väldigt lågt underlag, vilket bör beaktas i analysen. "),"")`
 
 \newpage
 
@@ -1672,21 +1682,21 @@ trip_age_andel_df <- trip_age_andel %>%
   select(!(Ålder)) %>%
   mutate(Kollektivtrafik = Buss + Tåg)
 
-mest_bil <- rownames(trip_age_andel_df)[which.max(trip_age_andel_df$Bil)]
-mest_koll <- rownames(trip_age_andel_df)[which.max(trip_age_andel_df$Kollektivtrafik)]
-mest_cykel <- rownames(trip_age_andel_df)[which.max(trip_age_andel_df$Cykel)]
+mest_bil_alder <- rownames(trip_age_andel_df)[which.max(trip_age_andel_df$Bil)]
+mest_koll_alder <- rownames(trip_age_andel_df)[which.max(trip_age_andel_df$Kollektivtrafik)]
+mest_cykel_alder <- rownames(trip_age_andel_df)[which.max(trip_age_andel_df$Cykel)]
 
 bil_okande <- (sum(arrange(trip_age_andel_df,Bil)==trip_age_andel_df) == nrow(trip_age_andel_df)*ncol(trip_age_andel_df))
 koll_sjunkande <- (sum(arrange(trip_age_andel_df,desc(Kollektivtrafik))==trip_age_andel_df) == nrow(trip_age_andel_df)*ncol(trip_age_andel_df))
 cykel_sjunkande <- (sum(arrange(trip_age_andel_df,desc(Cykel))==trip_age_andel_df) == nrow(trip_age_andel_df)*ncol(trip_age_andel_df))
 ```
 
-`r ifelse(which.max(trip_age_andel_df$Kollektivtrafik)==1,"De yngsta",paste("Åldersgruppen",mest_koll))` åker i högre utsträckning med kollektivtrafiken än övriga grupper. `r ifelse(koll_sjunkande,"Kollektivtrafiksandelen sjunker sedan med stigande ålder","")`. `r ifelse(mest_koll==mest_cykel,"Det också","Däremot är det")` åldersgruppen `r mest_cykel` som gör fler cykelresor än övriga grupper. Andelen bilresor `r ifelse(bil_okande,"ökar med stigande ålder och ","")` är högst i ålderskategorin `r mest_bil`, där `r round(max(trip_age_andel_df$Bil)*100)` procent av resorna görs med bil.
+`r ifelse(which.max(trip_age_andel_df$Kollektivtrafik)==1,"De yngsta",paste("Åldersgruppen",mest_koll_alder))` åker i högre utsträckning med kollektivtrafiken än övriga grupper. `r ifelse(koll_sjunkande,"Kollektivtrafiksandelen sjunker sedan med stigande ålder","")`. `r ifelse(mest_koll_alder==mest_cykel_alder,"Det också","Däremot är det")` åldersgruppen `r mest_cykel_alder` som gör fler cykelresor än övriga grupper. Andelen bilresor `r ifelse(bil_okande,"ökar med stigande ålder och ","")` är högst i ålderskategorin `r mest_bil_alder`, där `r round(max(trip_age_andel_df$Bil)*100)` procent av resorna görs med bil.
 
 ### Färdsätt efter sysselsättning
 
 
-I åldern 15–85 år är `r round(sys_omrade_totalt$"Förvärvsarbetande/egen företagare"*100)` procent förvärvsarbetande, `r round(sys_omrade_totalt$Studerande*100)` procent studerande, `r round(sys_omrade_totalt$Pensionär*100)` procent är pensionärer. `r mest_frekvent_färdmedel` är det vanligaste färdmedlet för samtliga grupper `r ifelse(nrow(avvikande_vanligaste_färdmedel)>0,paste("Förutom för",upprakning(rownames(avvikande_vanligaste_färdmedel),10)),"")`. Bil användes i störst utsträckning av gruppen `r tolower(mest_bil)` och minst i gruppen `r tolower(minst_bil)`. Kollektivtrafiksandelen var högst i gruppen `r tolower(mest_koll)`. Störst andel cykelresor stod gruppen `r tolower(mest_cykel)` för.
+I åldern 15–85 år är `r round(sys_omrade_totalt$"Förvärvsarbetande/egen företagare"*100)` procent förvärvsarbetande, `r round(sys_omrade_totalt$Studerande*100)` procent studerande, `r round(sys_omrade_totalt$Pensionär*100)` procent är pensionärer. `r mest_frekvent_färdmedel` är det vanligaste färdmedlet för samtliga grupper `r ifelse(nrow(avvikande_vanligaste_färdmedel)>0,paste("Förutom för",upprakning(rownames(avvikande_vanligaste_färdmedel),10)),"")`. Bil användes i störst utsträckning av gruppen `r tolower(mest_bil_syfte)` och minst i gruppen `r tolower(minst_bil_syfte)`. Kollektivtrafiksandelen var högst i gruppen `r tolower(mest_koll)`. Störst andel cykelresor stod gruppen `r tolower(mest_cykel)` för.
 
 
 ```{r sys-diagram, echo = FALSE, results = "asis", fig.cap = "Resornas färdmedelsfördelning per sysselsättning"}
