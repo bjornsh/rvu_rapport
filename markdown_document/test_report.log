@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2021/W32TeX) (preloaded format=pdflatex 2021.9.21)  28 SEP 2021 16:35
+=======
+This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2021/W32TeX) (preloaded format=pdflatex 2021.9.20)  28 SEP 2021 14:58
+>>>>>>> 928a612c2e5d5c94225dda06aaf8a7c82aa3c05f
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1388,6 +1392,7 @@ pdfTeX warning (dest): name{Hfootnote.2} has been referenced but does not exist
 pdfTeX warning (dest): name{Hfootnote.1} has been referenced but does not exist
 , replaced by a fixed one
 
+<<<<<<< HEAD
 {c:/Users/seds24337/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec
 .enc}<c:/Users/seds24337/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/
 lm/lmbx10.pfb><c:/Users/seds24337/AppData/Roaming/TinyTeX/texmf-dist/fonts/type
@@ -1400,6 +1405,20 @@ ta/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb><c:/Users/seds2433
 7/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr8.pfb><c:/Users/s
 eds24337/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb>
 Output written on test_report.pdf (26 pages, 478634 bytes).
+=======
+{c:/Users/SETK21602/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec
+.enc}<c:/Users/SETK21602/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/
+lm/lmbx10.pfb><c:/Users/SETK21602/AppData/Roaming/TinyTeX/texmf-dist/fonts/type
+1/public/lm/lmbx12.pfb><c:/Users/SETK21602/AppData/Roaming/TinyTeX/texmf-dist/f
+onts/type1/public/lm/lmr10.pfb><c:/Users/SETK21602/AppData/Roaming/TinyTeX/texm
+f-dist/fonts/type1/public/lm/lmr12.pfb><c:/Users/SETK21602/AppData/Roaming/Tiny
+TeX/texmf-dist/fonts/type1/public/lm/lmr17.pfb><c:/Users/SETK21602/AppData/Roam
+ing/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr6.pfb><c:/Users/SETK21602/AppDa
+ta/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb><c:/Users/SETK2160
+2/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr8.pfb><c:/Users/S
+ETK21602/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb>
+Output written on test_report.pdf (25 pages, 478119 bytes).
+>>>>>>> 928a612c2e5d5c94225dda06aaf8a7c82aa3c05f
 PDF statistics:
  439 PDF objects out of 1000 (max. 8388607)
  369 compressed objects within 4 object streams
