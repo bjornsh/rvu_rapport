@@ -1876,7 +1876,7 @@ x
 
 
 ```{r travel_share-calc, echo = FALSE, results = "asis"}
-# Daniel
+
 max_car <- get_trip(temp_plot, "max", "Andel")
 max_train  <- which.max(subset(temp_plot, Färdmedel=="Tåg")$Andel)
 train <- temp_plot[temp_plot$Färdmedel=="Tåg",] 
@@ -1885,8 +1885,6 @@ bike <- temp_plot[temp_plot$Färdmedel=="Cykel",]
 max_bike <- bike[which.max(bike$Andel),]
 ```
 
-
-Andelen resor som genomförs med bil är störst vid `r max_car$avstand` kilometer. Andelen resor med tåg är störst vid `r max_train$avstand`. Cykelandelen är som högst för resor på ca `r max_bike$avstand` km och sjunker sedan successivt med ökat avstånd.
 
 Nedan följer ett diagram som visar färdmedelsfördelnjing per reslängd.
 
