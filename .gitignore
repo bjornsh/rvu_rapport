@@ -8,4 +8,7 @@
 *.pdf
 *.RData
 *.RHistory
+*.log
+*.toc
+*.aux
 .Rproj.user

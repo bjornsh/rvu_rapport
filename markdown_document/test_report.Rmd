@@ -5,6 +5,7 @@ site: bookdown::bookdown_site
 output:
   bookdown::pdf_document2: default
   bookdown::html_document2:
+  toc_title: "Innehållsföretckning"
 
 header-includes:
   - \renewcommand{\figurename}{Figur }
@@ -1396,7 +1397,7 @@ resor_barplot <- ggplot(resor_per_individ_summa, aes(factor(Färdmedel, level = 
     coord_cartesian(xlim = c(1,nrow(resor_per_individ_summa))) +
     scale_fill_manual(values=rev(palett)) +
     scale_y_continuous(labels = scales::percent) +
-    geom_text(aes(label=percent(Perc_resor, 1)),size = 3, position=position_dodge(width=0.9), vjust=-0.25) + #etiketter
+    geom_text(aes(label=percent(Perc_resor, 2)),size = 3, position=position_dodge(width=0.9), vjust=-0.25) + #etiketter
     # scale_fill_discrete(breaks=ordning_fardmedel) +
     labs(
         x = "Färdmedel",
@@ -1423,7 +1424,7 @@ reslangd_barplot <- ggplot(reslangd_per_fardmedel, aes(factor(Färdmedel, level 
     coord_cartesian(xlim = c(1,nrow(reslangd_per_fardmedel))) +
     scale_fill_manual(values=rev(palett)) +
     scale_y_continuous(labels = scales::percent) +
-    geom_text(aes(label=percent(perc_reslangd, 1)),size = 3, position=position_dodge(width=0.9), vjust=-0.25) + #etiketter
+    geom_text(aes(label=percent(perc_reslangd, 2)),size = 3, position=position_dodge(width=0.9), vjust=-0.25) + #etiketter
     labs(
         x = "Färdmedel",
         y = "Andel av det totala trafikarbetet",

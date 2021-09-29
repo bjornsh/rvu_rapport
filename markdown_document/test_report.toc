@@ -20,6 +20,6 @@
 \contentsline {subsection}{\numberline {3.5}Reslängd och fordonskilometer}{12}{subsection.3.5}%
 \contentsline {subsubsection}{\numberline {3.5.1}Reserelationer inom Bålsta tätort}{14}{subsubsection.3.5.1}%
 \contentsline {subsubsection}{\numberline {3.5.2}Utpendling från Bålsta tätort}{15}{subsubsection.3.5.2}%
-\contentsline {section}{\numberline {4}Bilagor}{17}{section.4}%
-\contentsline {subsection}{\numberline {4.1}Karta}{17}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}Detaljerade tabeller}{18}{subsection.4.2}%
+\contentsline {section}{\numberline {4}Bilagor}{16}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Karta}{16}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Detaljerade tabeller}{17}{subsection.4.2}%
