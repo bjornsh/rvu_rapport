@@ -1452,10 +1452,6 @@ reslangd_barplot
 
 Män och kvinnor gör ungefär lika många resor per person och dag, `r resor_per_dag_man` respektive `r resor_per_dag_kvinna`. Män använder bil i högre utsträckning än kvinnor, `r share_car_men` procent jämfört med `r share_car_women` procent. Kvinnor färdas i störra utsträckning med kollektivtrafik än män `r share_transit_women`, respektive `r share_transit_men` procent. Kvinnor cyklar i större utsträckning än män, `r share_bike_women` procent respektive `r share_bike_men` procent.
 
-```{r}
-
-```
-
 
 ## Fördelning mellan ålderskategorier
 
@@ -1890,7 +1886,6 @@ x <- kbl(reslangd_per_omrade, digits = 1, longtable = T, booktabs = T, linesep =
 
 ```{r reslangd-per-omrade-text, echo = FALSE, results = "asis"}
 
-# Databearbetning för löptext om \@ref(tab:reslangd-per-omrade-tabell)
 
 area_shortest_trips <-  get_trip(reslangd_per_omrade, "min", "Median") # området med kortast medianresa
 area_longest_trips <-  get_trip(reslangd_per_omrade, "max", "Median") # området med längst medianresa
