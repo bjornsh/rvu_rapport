@@ -3,11 +3,13 @@ author: "WSP"
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 output:
-  bookdown::pdf_document2: default
+  bookdown::pdf_document2: 
   bookdown::html_document2:
-  toc_title: "Innehållsföretckning"
+  
+  # toc_title: "Innehållsföreteckning"
 
 header-includes:
+  - \renewcommand{\contentsname}{Innehållsförteckning}
   - \renewcommand{\figurename}{Figur }
   - \makeatletter
   - \def\fnum@figure{\figurename\thefigure}
@@ -35,6 +37,7 @@ header-includes:
 ---
 
 \raggedright
+
 ---
 ```{r indata, echo=FALSE, include = FALSE}
 #Nedan specificeras indata/globala parametrar
