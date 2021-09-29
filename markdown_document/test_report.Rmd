@@ -72,7 +72,7 @@ title: Resvaneundersökning i `r rapportomrade_rubrik`
 
 
 lapply(required_packages_list, require, character.only = TRUE)
-update.packages(ask = FALSE, checkBuilt = TRUE, repos = "http://cran.us.r-project.org")
+#update.packages(ask = FALSE, checkBuilt = TRUE, repos = "http://cran.us.r-project.org")
 
 if(is_tinytex() == FALSE){tinytex::install_tinytex()}
 tinytex::tlmgr_update()
@@ -2078,17 +2078,17 @@ kable(od_matrix_perc, caption = "Fördelning av resorna inom rapportområdet. Ra
 ### Utpendling från `r (rapportomrade_rubrik)`
 
 
-```{r od_matrix_extern, echo=FALSE, include = FALSE}
+```{r od-matrix-extern-kommun, echo=FALSE, include = FALSE}
 
 minsta_antal <- 6
 
 #Skapar od-matris för alla resor
 utpendling <- rvu %>%
-    select(start_rapportomrade_namn, stop_rapportomrade_namn) %>%
-    filter(!is.na(start_rapportomrade_namn)) %>%
-    filter(!is.na(stop_rapportomrade_namn)) %>%
-    filter(start_rapportomrade_namn %in% rapportomrade) %>%
-    group_by(stop_rapportomrade_namn) %>%
+    select(start_kommun_namn, stop_kommun_namn) %>%
+    filter(!is.na(start_kommun_namn)) %>%
+    filter(!is.na(stop_kommun_namn)) %>%
+    #filter(start_kommun_namn %in% rapportomrade) %>%
+    group_by(stop_kommun_namn) %>%
     summarize(antal = n()) %>%
     ungroup()
 
@@ -2096,13 +2096,13 @@ utpendling <- rvu %>%
 minsta_antal <- min(minsta_antal,nrow(od_matrix))
 # summa <- sum(utpendling$antal)
 
-inom_omrade <- utpendling %>%
-  filter(stop_rapportomrade_namn == rapportomrade)
+inom_omrade <- utpendling #%>%
+  #filter(stop_kommun_namn == rapportomrade)
 andel_inom <- sum(inom_omrade$antal)/sum(utpendling$antal)
 
 #Filtrerar ut största och sorterar
 utpendling <- utpendling %>%
-  filter(!(stop_rapportomrade_namn %in% rapportomrade)) %>%
+  #filter(!(stop_kommun_namn %in% rapportomrade)) %>%
   top_n(minsta_antal) %>%
   arrange(desc(antal)) %>%
   mutate(perc = antal/sum(antal))#%>%
@@ -2113,8 +2113,8 @@ utpendling <- utpendling %>%
 ```
 Av alla resor som utgår från `r (rapportomrade_rubrik)`, görs `r round(100-andel_inom*100)` % till andra områden. Nedan sammanställs utpendlingen för boende i `r (rapportomrade_rubrik)` uttryckt som andelar av resorna som startar i tätorten. Anledningen till att inte inpendling kan redovisas är att urvalet ur resvaneundersökningen enbart omfattar boende i `r (rapportomrade_rubrik)`.
 
-```{r od-matrix-extern-table, echo = FALSE, result="asis"}
-utpendling_barplot <- ggplot(utpendling, aes(factor(stop_rapportomrade_namn, level = stop_rapportomrade_namn), perc, fill = factor(stop_rapportomrade_namn, level = stop_rapportomrade_namn))) +
+```{r od-matrix-extern-table-kommun, echo = FALSE, result="asis"}
+utpendling_barplot <- ggplot(utpendling, aes(factor(stop_kommun_namn, level = stop_kommun_namn), perc, fill = factor(stop_kommun_namn, level = stop_kommun_namn))) +
     geom_bar(stat = "identity") +
     rvu_theme() +
    scale_y_continuous(labels = scales::percent) +
@@ -2124,7 +2124,58 @@ utpendling_barplot <- ggplot(utpendling, aes(factor(stop_rapportomrade_namn, lev
     labs(
         x = "Resmål",
         y = "Andel resor",
-        title = "Andel utpendlingsresor"
+        title = "Andel utpendlingsresor till olika kommuner"
+    )
+
+utpendling_barplot
+```
+
+```{r od-matrix-extern-tatort, echo=FALSE, include = FALSE}
+
+minsta_antal <- 6
+
+#Skapar od-matris för alla resor
+utpendling <- rvu %>%
+    select(start_tatort_namn, stop_tatort_namn) %>%
+    filter(!is.na(start_tatort_namn)) %>%
+    filter(!is.na(stop_tatort_namn)) %>%
+    #filter(start_tatort_namn %in% rapportomrade) %>%
+    group_by(stop_tatort_namn) %>%
+    summarize(antal = n()) %>%
+    ungroup()
+
+#minsta antal får aldrig vara större än antalet områden
+minsta_antal <- min(minsta_antal,nrow(od_matrix))
+# summa <- sum(utpendling$antal)
+
+inom_omrade <- utpendling #%>%
+  #filter(stop_tatort_namn == rapportomrade)
+andel_inom <- sum(inom_omrade$antal)/sum(utpendling$antal)
+
+#Filtrerar ut största och sorterar
+utpendling <- utpendling %>%
+  #filter(!(stop_tatort_namn %in% rapportomrade)) %>%
+  top_n(minsta_antal) %>%
+  arrange(desc(antal)) %>%
+  mutate(perc = antal/sum(antal))#%>%
+  # mutate(antal = antal/summa) %>%
+  # mutate(across(where(is.numeric), ~percent(.x, accuracy = 1))) 
+
+
+```
+
+```{r od-matrix-extern-table-tatort, echo = FALSE, result="asis"}
+utpendling_barplot <- ggplot(utpendling, aes(factor(stop_tatort_namn, level = stop_tatort_namn), perc, fill = factor(stop_tatort_namn, level = stop_tatort_namn))) +
+    geom_bar(stat = "identity") +
+    rvu_theme() +
+   scale_y_continuous(labels = scales::percent) +
+    coord_cartesian(xlim = c(1,nrow(utpendling))) +
+    geom_text(aes(label=percent(perc, 1)),size = 3, position=position_dodge(width=0.9), vjust=-0.25) + #etiketter
+    scale_fill_manual(values=rev(palett)) +
+    labs(
+        x = "Resmål",
+        y = "Andel resor",
+        title = "Andel utpendlingsresor till olika tätorter"
     )
 
 utpendling_barplot
