@@ -64,7 +64,7 @@ title: Resvaneundersökning i `r rapportomrade_rubrik`
 ```{r setup, include=FALSE}
 
   required_packages_list <-  c(
-  "knitr", "kableExtra", "tidyverse", "readxl", "bookdown", "pxweb", "scales", "stringi", "leaflet", "sf", "mapview", "processx", "tinytex", "jsonlite", "htmltools", "webshot", "jsontools")
+  "knitr", "kableExtra", "tidyverse", "readxl", "bookdown", "pxweb", "scales", "stringi", "leaflet", "sf", "mapview", "processx", "tinytex", "jsonlite", "htmltools", "webshot", "jsontools", "farver")
   
   for (pack in required_packages_list){
     if(pack %in% installed.packages() == FALSE){install.packages(pack, repos = "http://cran.us.r-project.org")}
@@ -341,7 +341,7 @@ num_trips_age <- pers %>%
             "Resor per dag och person" = sum(num_trips, na.rm = TRUE) / n(),
             "Resor per dag och person (enbart de som rest)" = mean(num_trips, na.rm = TRUE),
             "Antal_observationer" = n()) %>%
-  mutate(alder = c("15-24 år", "25-64 år", "65-85 år")) %>%
+  mutate(alder = c("15–24 år", "25–64 år", "65–85 år")) %>%
   rename('Grupp' = alder) %>%
   mutate('Befolkning' = c(sum(befolkning_per_område$Ålder_15_19,na.rm = TRUE)+sum(befolkning_per_område$Ålder_20_24,na.rm = TRUE),
                           sum(befolkning_per_område$Ålder_25_39,na.rm = TRUE)+sum(befolkning_per_område$Ålder_40_64,na.rm = TRUE),
@@ -758,9 +758,9 @@ respondenter <- pers %>%
   summarize(Respondenter = n(),
             Man = sum(kon == "Man"), 
             Kvinnor = sum(kon == "Kvinna"),
-            "15-24 år" = sum(alder >= 15 & alder < 25),
-            "25-64 år" = sum(alder >= 25 & alder < 65),
-            "65-85 år" = sum(alder >= 65),
+            "15–24 år" = sum(alder >= 15 & alder < 25),
+            "25–64 år" = sum(alder >= 25 & alder < 65),
+            "65–85 år" = sum(alder >= 65),
             Omrade_kod = first(Omrade_kod)) %>%
   left_join(select(scb_befolkning, c(Omrade_kod,Befolkning)), by = c("Omrade_kod" = "Omrade_kod")) %>% #Lägger till befolkning per zon
   mutate(Befolkning = replace_na(Befolkning,0)) %>%
@@ -994,12 +994,12 @@ trip_age <- rvu %>%
   #Räknar ut radsummor
   ungroup() %>%
   mutate(alder = c(
-    "15-18 år",
-    "18-24 år",
-    "25-39 år",
-    "40-64 år",
-    "65-74 år",
-    "75-85 år"
+    "15–18 år",
+    "18–24 år",
+    "25–39 år",
+    "40–64 år",
+    "65–74 år",
+    "75–85 år"
     )) %>%
   rename('Ålder' = alder) %>%
     bind_rows(summarize(.,
@@ -1988,11 +1988,11 @@ agg_rvu_avs[is.na(agg_rvu_avs)]<-0
 agg_rvu_avs$Totalt<-agg_rvu_avs$Bil+agg_rvu_avs$Buss+agg_rvu_avs$Tåg+agg_rvu_avs$Cykel+agg_rvu_avs$Gång
 agg_rvu_avs <- agg_rvu_avs[c("avstand","Bil","Tåg","Buss","Cykel","Gång","Totalt")]
 agg_rvu_avs <- mutate(agg_rvu_avs,avstand = c(
-    "0-2",
-    "2-5",
-    "5-10",
-    "10-25",
-    "25-50",
+    "0–2",
+    "2–5",
+    "5–10",
+    "10–25",
+    "25–50",
     "50+"
   )) 
 

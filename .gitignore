@@ -11,5 +11,6 @@
 *.log
 *.toc
 *.aux
+*.tex
 .Rproj.user
 rvu_rapport.Rproj
