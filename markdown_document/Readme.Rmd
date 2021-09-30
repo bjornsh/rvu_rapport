@@ -29,9 +29,9 @@ Det krävs dessutom en shapefil, antingen med DESO-områden eller med kommuner, 
 ### Krav på mappstruktur
 De tre .csv indatafilerna kan ligga antingen i samma mapp som skriptet eller i en annan mapp, men adressen behöver vara känd (det ska anges i skriptets förutsättningar).
 
-Om rapporten gäller en tätort eller kommun behöver DESO-shapefilen ligga i en mapp i samma mapp som skriptet. Mappen ska heta deso_2018_v2 och ska innehålla den .gpkg-filen som beskrivits ovan. Det enklaste sättet är att ladda ner den zippade filen från SCB och packa upp den i skriptets mapp.
+Om rapporten gäller en tätort eller kommun behöver DESO-shapefilen ligga i en mapp i samma mapp som skriptet. Mappen ska heta deso_2018_v2 och ska innehålla den .gpkg-filen som beskrivits ovan. Det enklaste sättet är att ladda ner den zippade filen från SCB^[https://www.scb.se/vara-tjanster/oppna-data/oppna-geodata/] och packa upp den i skriptets mapp.
 
-Om rapporten gäller en region behöver kommun-shapefilen ligga i samma mapp som skriptet.
+Om rapporten gäller en region behöver kommun-shapefilen ligga i en mapp i samma mapp som skriptet. Mappen ska heta KommunSweref99TM och ska innehålla .shp-filen *Kommun_Sweref99TM_region.shp*. Det enklaste sättet är att ladda ner den zippade filen från SCB^[https://www.scb.se/hitta-statistik/regional-statistik-och-kartor/regionala-indelningar/digitala-granser/] och packa upp mappen *KommunSweref99TM.zip* i skriptets mapp.
 
 Resultatet av skriptet blir en PDF eller HTML fil i samma mapp som skriptet.
 
