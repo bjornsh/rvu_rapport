@@ -2245,7 +2245,7 @@ kable(deso_data_table, caption = "Nyckel mellan kod och områden", booktabs = T,
 Nedan följer tabeller som aver ge en mer detaljerad bild av resvaneundersökningen.
 
 ```{r sys-omrade-table, echo = FALSE, results = "asis"}
-x <- kable(sys_omrade_abs, caption = "Antal resor per resärende och område, redovisat uppräknat på antalet invånare.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+x <- kable(sys_omrade_abs, caption = "Antal resor per sysselsättning och område, redovisat uppräknat på antalet invånare.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position"),
                 full_width = TRUE) %>%
   row_spec(nrow(sys_omrade_abs), bold = T) %>% #gör Total-raden fetstilt
@@ -2260,7 +2260,7 @@ x
 ```
 
 ```{r sys-omrade-percent-table, echo = FALSE, results = "asis"}
-x <- kable(sys_omrade_percent, caption = "Resärende per område, redovisat i andelar uttryckt i procent per område.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+x <- kable(sys_omrade_percent, caption = "Sysselsättning per område, redovisat i andelar uttryckt i procent per område.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position"),
                 full_width = TRUE) %>%
   row_spec(nrow(sys_omrade_percent), bold = T) %>% #gör Total-raden fetstilt
@@ -2487,7 +2487,9 @@ x <- kable(trip_purpose_area_abs, caption = "Antal resor per resärende och omr�
   row_spec(nrow(trip_purpose_area_abs), bold = T) %>% #gör Total-raden fetstilt
   row_spec(0, bold = T, angle = 45) %>% #gör rubrikraden fetstilt
   column_spec(ncol(trip_purpose_area_abs), bold = T) %>%
-  column_spec(1, width = "1.2cm", bold = T)
+  column_spec(1, width = "1.2cm", bold = T) %>%
+  kableExtra::landscape()
+
 if(nrow(omraden_lagt_underlag) > 0) {x <- footnote(x,symbol = "Baseras på särskilt lågt antal respondenter.")}
 x
 
