@@ -174,27 +174,27 @@ pre code {
 
 <div id="bakgrund" class="section level2">
 <h2>Bakgrund</h2>
-<p>WSP har utvecklat ett verktyg för automatiserad skapande av en RVU-rapport baserat på data från undersökningar genomförda från Kollbar. Verktyget använder <em>markdown</em> för rapporten, <em>LaTeX</em> för rapportens grafiska element och stil samt programmeringsspråket <em>R</em> för dataanalyserna.</p>
-<p>Verktyget möjliggör att en rapport för en tätort, kommun eller region skapas med väldigt litet förarbete i indatat. Körtiden för verktyget estimeras på ~1 minut, beroende på datorkraft och status på installerade krävda R-paket och LaTeX-paket.</p>
+<p>WSP har utvecklat ett verktyg för automatiserad produktion av RVU-rapporter baserade på data från undersökningar genomförda från Kollektivtrafikbarometern. Verktyget använder <em>markdown</em> för rapporten, <em>LaTeX</em> för rapportens grafiska element och stil samt programmeringsspråket <em>R</em> för dataanalyserna.</p>
+<p>Verktyget möjliggör att en rapport för en tätort, kommun eller region skapas med väldigt liten ansträngning. Körtiden för verktyget estimeras till ~1 minut, beroende på datorkraft och status på installerade krävda R-paket och LaTeX-paket.</p>
 </div>
 <div id="metod" class="section level2">
 <h2>Metod</h2>
-<p>En dataset som innehåller data från undersökningen och har sammanställts av Region Uppsala matas in i skriptet. WSP har använt sig av paketet <em>bookdown</em>, som tillåter att producera PDF i LaTeX format med R markdown.</p>
+<p>Ett dataset som innehåller data från undersökningen och har sammanställts av Region Uppsala matas in i skriptet. WSP har använt sig av paketet <em>bookdown</em> för att producera en PDF-fil i LaTeX-format med R markdown.</p>
 </div>
 <div id="skriptanvändning" class="section level2">
 <h2>Skriptanvändning</h2>
 <div id="krav-på-datat" class="section level3">
 <h3>Krav på datat</h3>
-<p>Indata från kollbar tillhandahålls av Region Uppsala så att de är i lämplig format. Detta försäkras med Regionens egna skript och beskrivs alltså inte här. Indatat ligger i tre filer, <em>rvu.csv</em>, <em>pers.csv</em>, och <em>avst.csv</em>.</p>
+<p>Indata från kollektivtrafiksbarometern tillhandahålls av Region Uppsala så att de är i lämplig format. Detta försäkras med Regionens egna skript och beskrivs alltså inte här. Indatat ligger i tre filer, <em>rvu.csv</em>, <em>pers.csv</em>, och <em>avst.csv</em>.</p>
 <p>Skriptet anropar SCBs API verktyg för att hämta befolkningsdata i de undersökta områdena.</p>
-<p>Det krävs dessutom en shapefil, antingen med DESO-områden eller med kommuner, beroende på vilken geografisk aggreggering rapporten ska tas fram för. Detta används för att skapa en karta med den geografiska indelningen av det undersökta området. Om shapefilen gäller DESO-områden, bör hela geopaket finnas som en .gpkg fil (DeSO_2018_v2.gpkg). Kommunens shapefil kan finnas som en .shp fil.</p>
+<p>Det krävs dessutom en shapefil, antingen med DESO-områden eller med kommuner, beroende på vilken geografisk aggreggering rapporten ska tas fram för. Detta används för att skapa en karta med den geografiska indelningen av det undersökta området. Om rapporten delas upp på DESO-områden, bör ett geopaket finnas som en .gpkg-fil (DeSO_2018_v2.gpkg). Om rapporten delas upp på kommunnivå, bör kartfiler finnas i en mapp med .shp-fil.</p>
 </div>
 <div id="krav-på-mappstruktur" class="section level3">
 <h3>Krav på mappstruktur</h3>
 <p>De tre .csv indatafilerna kan ligga antingen i samma mapp som skriptet eller i en annan mapp, men adressen behöver vara känd (det ska anges i skriptets förutsättningar).</p>
-<p>Om rapporten gäller en tätort eller kommun behöver DESO-shapefilen ligga i en mapp i samma mapp som skriptet. Mappen ska heta deso_2018_v2 och ska innehålla den .gpkg-filen som beskrivits ovan. Det enklaste sättet är att ladda ner den zippade filen från SCB och packa upp den i skriptets mapp.</p>
-<p>Om rapporten gäller en region behöver kommun-shapefilen ligga i samma mapp som skriptet.</p>
-<p>Resultatet av skriptet blir en PDF eller HTML fil i samma mapp som skriptet.</p>
+<p>Om rapporten gäller en tätort eller kommun behöver DESO-shapefilen ligga in undermapp i indatamappen. Undermappen ska heta <em>deso_2018_v2</em> och ska innehålla den .gpkg-filen som beskrivits ovan. Det enklaste är att ladda ner den zippade filen från SCB<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> och packa upp den i indatamappen.</p>
+<p>Om rapporten gäller en region behöver kommun-shapefilen ligga i en undermapp till indatamappen. Undermappen ska heta <em>KommunSweref99TM</em> och innehålla .shp-filen <em>Kommun_Sweref99TM_region.shp</em>. Det enklaste är att ladda ner den zippade filen från SCB<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> och packa upp mappen <em>KommunSweref99TM.zip</em> i skriptets mapp.</p>
+<p>Resultatet av skriptet blir en PDF eller HTML-fil i samma mapp som skriptet.</p>
 </div>
 <div id="krav-på-paket" class="section level3">
 <h3>Krav på paket</h3>
@@ -219,29 +219,36 @@ pre code {
 <li><em>webshot</em> - v0.5.2</li>
 <li><em>farver</em> - v2.1.0</li>
 </ul>
-<p>Under exekveringen kommer de paket som inte är installerade på datorn installeras. I det här fallet installeras den senaste versionen av de olika paketen. Vi (och utvecklarna av R samt RStudio) rekommenderar att använda den senaste versionen av R-paket. Vi har använt oss av de mest populära och välskötta paketen, vilket minskar felrisken med någon senare uppdatering. Vi kan dock inte utesluta att något fel kan komma i framtiden med utvecklingar av paketen ovan.</p>
+<p>Under exekveringen kommer de paket som inte är installerade på datorn att installeras. I det här fallet installeras den senaste versionen av de olika paketen. Vi (och utvecklarna av R samt RStudio) rekommenderar att använda den senaste versionen av R-paketen. Vi har använt oss av de mest populära och välskötta paketen, vilket minskar felrisken vid nya uppdateringar. Vi kan dock inte utesluta att något fel kan komma i framtiden med uppdateringar av paketen ovan. Därför hänvisar vi till de fungerande paketversionerna ovan för att underlätta eventuell felsökning.</p>
 </div>
 <div id="krav-på-indata-i-skriptet" class="section level3">
 <h3>Krav på indata i skriptet</h3>
 <p>I skriptet finns det några variabler som behöver specificeras innan körningen och möjliggör att skriptet kan användas i olika sammanhang och geografier samt att dataanalysen kan göras med olika förutsättningar. Alla dessa specificeringar görs i den del av koden som ligger i den R chunk som heter <em>indata</em>. Det ligger precis efter kodens <em>preamble</em> som används av LaTeX för att specificera dokumentets format.</p>
 <ul>
-<li><em>rapportomrade</em>: en vektor av en eller flera sträng som definierar rapportens intresseområde. Detta används i dataanalysen, t.ex. i filtreringar av datat.</li>
-<li><em>rapportomrade_text</em>: en sträng som används i löptext när man refererar till rapportens intresseområde.</li>
-<li><em>rapportomrade_rubrik</em>: en sträng som används i rubriker (t.ex. i rapportens titel) när man refererar till rapportens intresseområde.</li>
+<li><em>rapportomrade</em>: en vektor av en eller flera strängar som definierar rapportens intresseområde. Detta används i dataanalysen, t.ex. i filtreringar av datat. T.ex. “Uppsala län” eller c(“Bålsta”, “Bålsta Skärplinge”)</li>
+<li><em>rapportomrade_text</em>: en sträng som används i löptext när man refererar till rapportens intresseområde. T.ex. “Bålsta”</li>
+<li><em>rapportomrade_rubrik</em>: en sträng som används i rubriker (t.ex. i rapportens titel) när man refererar till rapportens intresseområde. T.ex. “Bålsta tätort”</li>
 <li><em>rapportniva</em>: en sträng som definierar rapportens geografiska avgränsningen. Tre möjliga värden finns, <em>tatort</em>, <em>kommun</em>, eller <em>lan</em>.</li>
-<li><em>omradesniva</em>: en sträng som definierar den geografiska indelningen som resultatet ska redovisas på. Tre möjliga värden finns, <em>deso</em>, <em>tatort</em> eller <em>kommun</em>. Om rapportområdet är en region, bör <em>kommun</em> väljas och om det är en tätort bör <em>deso</em> väljas.</li>
-<li><em>starttid</em>: en 6-siffrig integer som definierar starttiden för filtreringen av datat, i format YYYYMM</li>
-<li><em>sluttid</em>: en 6-siffrig integer som definierar sluttiden för filtreringen av datat, i format YYYYMM</li>
-<li><em>palett</em>: en vektor av sträng med HTML-färgkoder av olika färger som ska användas i diagramm. De definierade värdena anser Region Uppsalas rekommenderade färger.</li>
-<li><em>table_api_address</em>: en sträng som definierar länk till SCB-tabell som ska användas för befolkningsmängd</li>
+<li><em>omradesniva</em>: en sträng som definierar den geografiska indelningen som resultatet ska redovisas på. Två möjliga värden finns, <em>deso</em> eller <em>kommun</em>. Om rapportområdet är en region, bör <em>kommun</em> väljas och om det är en kommun eller tätort bör <em>deso</em> väljas.</li>
+<li><em>starttid</em>: ett 6-siffrigt heltal som definierar starttiden för filtreringen av data, i format YYYYMM</li>
+<li><em>sluttid</em>: ett 6-siffrigt heltal som definierar sluttiden för filtreringen av data, i format YYYYMM</li>
+<li><em>palett</em>: en vektor av sträng med HTML-färgkoder av olika färger som ska användas i diagramm. Vektorn behöver innehålla minst sex färger. T.ex. Region Uppsalas färgskala: c(“#5144d3”,“#53a17f”,“#3599d5”,“#e6ad00”,“#d57667”,“#9e1863”)</li>
+<li><em>table_api_address</em>: en sträng som definierar länk till SCB-tabell som ska användas för befolkningsmängd. “<a href="http://api.scb.se/OV0104/v1/doris/en/ssd/BE/BE0101/BE0101Y/FolkmDesoAldKonN" class="uri">http://api.scb.se/OV0104/v1/doris/en/ssd/BE/BE0101/BE0101Y/FolkmDesoAldKonN</a>” bör användas, då inläsningen av befolkningsmängden är hårdkodad för denna API.</li>
 <li><em>sokvag</em>: en sträng som definierar sökvägen till csv-indatafilerna. Lämnas strängen tom, används skriptets mapp som sökväg</li>
 <li><em>lagt_underlag</em>: en siffra som fungerar som gräns till vad som ska anses som lågt antal respondenter i dataanalysen. Alla resultat som baseras på antal respondenter under denna gräns kommer att markeras i rapporten.</li>
 </ul>
 </div>
 <div id="att-köra-verktyget" class="section level3">
 <h3>Att köra verktyget</h3>
-<p>För att köra verktyget krävs det att indatat uppdateras och sen att trycka på <em>Knit</em> i R-Studio. Default-export är en PDF rapport, men man kan ändå välja HTML som format.</p>
+<p>För att köra verktyget krävs det att indatat uppdateras. Sedan ska användaren trycka på <em>Knit</em> i R-Studio. Som standard exporteras en PDF rapport. Det är dock också möjligt att välja HTML som format.</p>
 </div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://www.scb.se/vara-tjanster/oppna-data/oppna-geodata/" class="uri">https://www.scb.se/vara-tjanster/oppna-data/oppna-geodata/</a><a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://www.scb.se/hitta-statistik/regional-statistik-och-kartor/regionala-indelningar/digitala-granser/" class="uri">https://www.scb.se/hitta-statistik/regional-statistik-och-kartor/regionala-indelningar/digitala-granser/</a><a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+</ol>
 </div>
 
 

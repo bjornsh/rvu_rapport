@@ -6,7 +6,6 @@ output:
   
   bookdown::pdf_document2: 
   bookdown::html_document2:
-
 header-includes:
   - \renewcommand{\contentsname}{Innehållsförteckning}
   - \renewcommand{\figurename}{Figur }
@@ -41,11 +40,11 @@ header-includes:
 ```{r indata, echo=FALSE, include = FALSE}
 #Nedan specificeras indata/globala parametrar
 #Definierar om respondenter ska delas upp på kommun, tätort eller deso-nivå:
-rapportomrade <- "Uppsala län" #c("Bålsta", "Bålsta Skärplinge") #Sträng eller array över områden som inkluderas
-rapportomrade_text <- "Region Uppsala" #"Bålsta" #namn på området som skrivs i löptexten
-rapportomrade_rubrik <- "Region Uppsala" #"Bålsta tätort" #namn på området som skrivs i rubriker
-rapportniva <- 'lan' #"tatort" #'kommun' #'lan' #vilken geografisk avgränsning rapporten har
-omradesniva <- 'kommun' #"deso" #'kommun' #'tatort' #vilken områdesnivån som resultaten ska redovisas på. Om rapportområdet är en region, bör kommun väljas och om det är en tätort bör deso väljas osv...
+rapportomrade <- c("Bålsta", "Bålsta Skärplinge") #"Uppsala län" #Sträng eller array över områden som inkluderas
+rapportomrade_text <- "Bålsta" #"Region Uppsala"  #namn på området som skrivs i löptexten
+rapportomrade_rubrik <- "Bålsta tätort" #"Region Uppsala" #namn på området som skrivs i rubriker
+rapportniva <- "tatort" #'kommun' #'lan' #vilken geografisk avgränsning rapporten har
+omradesniva <- 'deso' #"deso" #'kommun' #'tatort' #vilken områdesnivån som resultaten ska redovisas på. Om rapportområdet är en region, bör kommun väljas och om det är en tätort bör deso väljas osv...
 #Agränsning i tid
 starttid <- 202101 #YYYYMM
 sluttid <- 202108 #YYYYMM
@@ -172,7 +171,7 @@ pers <- read_delim(paste0(sokvag,"person_håbo2021.csv"), ";", escape_double = F
                      locale = locale(encoding = "ISO-8859-1"), 
                      trim_ws = TRUE)
 
-avst <- read_delim(paste0(sokvag,"restid_region2021.csv"), ";", escape_double = FALSE, 
+avst <- read_delim(paste0(sokvag,"restid_håbo2021.csv"), ";", escape_double = FALSE, 
                      locale = locale(encoding = "ISO-8859-1"), 
                      trim_ws = TRUE) %>%
   select(respondentid, resa_nr, distance_straight_line, distance_google)
@@ -226,6 +225,17 @@ rvu <- rvu %>%
 #Vilka tätorter och kommuner som rapporten innefattar
 tatorter <- unique(pers$bostad_tatort_namn)
 kommuner <- unique(pers$bostad_kommun_namn)
+
+#textvariabler till textstycke
+if (omradesniva == 'deso')
+  omradesniva_text <- 'DeSO'
+  omradesniva_text_plural <- 'DeSO-områden'
+if (omradesniva == 'tatort')
+  omradesniva_text <- 'tätort'
+  omradesniva_text_plural <- 'tätorter'
+if (omradesniva == 'kommun')
+  omradesniva_text <- 'kommun'
+  omradesniva_text_plural <- 'kommuner'
 ```
 
 ```{r api, echo=FALSE, include = FALSE}
@@ -510,15 +520,6 @@ reslangd_summa_tot <- reslangd %>%
   mutate(Totalt_antal_resor = sum(resor_per_individ$Totalt_antal_resor,na.rm = TRUE)) %>%
   mutate(Trafikarbete_totalt = Totalt_antal_resor*Medel)
 
-#Räknar ut totalt per färdmedel och område
-# reslangd_per_område <- reslangd %>%
-#   select(-one_of("Omrade_kod")) %>%
-#   group_by(Omrade,Färdmedel) %>% #`summarise()` has grouped output by 'Omrade'. You can override using the #.groups argument.???
-#   summarise("Median" = round(median(avstand),0), "Medel" = round(mean(avstand),1), "Antal_observationer" = n()) %>%
-#   left_join(resor_per_individ, by = c("Omrade" = "Omrade", "Färdmedel" = "Färdmedel")) %>%
-#   mutate(Trafikarbete_totalt = Totalt_antal_resor*Medel)
-
-##Alternativ till att redovisa per färdmedel##
 #Antal resor per individ (och område, färdmedel) räknas ut
 resor_per_omrade_fardmedel <- reslangd %>% #Resor per individ blir överskattat pga fel med att individer utan resa saknar bostadsort
   group_by(Omrade,Omrade_kod) %>%
@@ -683,7 +684,7 @@ trip_person_mode_extremer_höga <- extremer_höga(trip_mode,"Område",mest_frekv
 trip_person_mode_extremer_låga <- extremer_låga(trip_mode,"Område",mest_frekvent_fardmedel)
 
 #Producerar brödtext.
-text_fardmedelsfordelning <- paste(tolower(mest_frekvent_fardmedel)," är det vanligaste färdmedlet i ",rapportomrade_text," och står för ",round(mest_frekvent_andel*100)," procent av alla resorna. ",sep="")
+text_fardmedelsfordelning <- paste(tolower(mest_frekvent_fardmedel)," är det vanligaste färdmedlet i ",rapportomrade_text," och står för ",round(mest_frekvent_andel*100)," procent av alla resor. ",sep="")
 
 if (nrow(avvikande_vanligaste_färdmedel) > 0) {
   text_fardmedelsfordelning <- paste(text_fardmedelsfordelning,"I zon ",sep="")
@@ -691,7 +692,7 @@ if (nrow(avvikande_vanligaste_färdmedel) > 0) {
   text_uppräkning <- upprakning(rownames(avvikande_vanligaste_färdmedel),max_antal_uppräknade)
   text_fardmedelsfordelning <- paste(text_fardmedelsfordelning,text_uppräkning," var dock ",avvikande_vanligaste_färdmedel$max[1]," det vanligaste färdmedlet. ",sep="")
 } else{
-  text_fardmedelsfordelning <- paste(text_fardmedelsfordelning," Detta är också det vanligaste färdmedlet i varje enskilt område. ")
+  text_fardmedelsfordelning <- paste0(text_fardmedelsfordelning," Detta är också det vanligaste färdmedlet i varje enskild ",omradesniva_text,".")
 }
 
 extremer <- trip_person_mode_extremer_höga
@@ -872,7 +873,7 @@ storst_utpendlingskommun <- slice(utpendling_kommun,1)$stop_kommun_namn
 
 ```{r utpendling-tatort, echo=FALSE, include = FALSE}
 
-minsta_antal <- 10
+minsta_antal <- 6
 
 #Skapar sammanställning av utpendling för alla resor
 utpendling_tatort <- rvu %>%
@@ -884,8 +885,9 @@ utpendling_tatort <- rvu %>%
     summarize(antal = n()) %>%
     ungroup()
 
-inom_omrade <- utpendling_tatort #%>%
-  #filter(stop_tatort_namn == rapportomrade)
+inom_omrade <- utpendling_tatort %>%
+  filter(stop_tatort_namn %in% tatorter)
+
 andel_inom <- sum(inom_omrade$antal)/sum(utpendling_tatort$antal)
 
 #Filtrerar ut största och sorterar
@@ -942,7 +944,7 @@ deso_data_table <- deso_data %>%
 }
 
 #Following needs modification, which areas to filter
-if(omradesniva == "tätort"){
+if(omradesniva == "tatort"){
 map_kommun <- st_read(paste0(sokvag,"To2018_Swe99TM.shp")) %>% #read shapefile and filter
     filter(LAN_NAMN == "Uppsala län") %>%
     st_transform(4326) %>% #transform coordinates to 4326 (WGS 84). Leaflet always needs coordinates to be in 4326, then projects in 3857.
@@ -1050,14 +1052,6 @@ if (nrow(extremer)>1){ #om det finns extremer
     svarsgrad_min <- slice(svarsgrad,which.min(Svarsfrekvens))
     text_andel_svarande <- paste(text_andel_svarande,"Lägst andel svarande återfinns i ",svarsgrad_min$Omrade,", där andelen svarande var nära ",round(svarsgrad_min$Svarsfrekvens)," %. ",sep="")
   }
-
-#textvariabler till kommande textstycke
-if (omradesniva == 'deso')
-  omradesniva_text <- 'DeSO-nivå'
-if (omradesniva == 'tätort')
-  omradesniva_text <- 'tätorts'
-if (omradesniva == 'kommun')
-  omradesniva_text <- 'kommun'
 
 antal_individer <- nrow(pers)
 
@@ -1180,10 +1174,10 @@ kvinna_storst_andel <- trip_mode_gender_andel_df["Kvinna",kvinna_storst]
 
 text_fardmedel_kon_sammanfattning <- ""
 if (length(man_storst) > 0) {
-  text_fardmedel_kon_sammanfattning <- paste(text_fardmedel_kon_sammanfattning,"Bland män stod ",paste(tolower(man_storst), collapse = ' och '), " för en större del av resorna (",round(man_storst_andel*100)," %) än bland kvinnor. ", sep = "")
+  text_fardmedel_kon_sammanfattning <- paste(text_fardmedel_kon_sammanfattning,"Bland män stod ",paste(tolower(man_storst), collapse = ' och '), " för en större del av resorna (",round(man_storst_andel*100)," %) än bland kvinnor (",round(trip_mode_gender_andel_df["Kvinna",man_storst]*100)," %). ", sep = "")
 }
 if (length(kvinna_storst) > 0) {
-  text_fardmedel_kon_sammanfattning <- paste(text_fardmedel_kon_sammanfattning,"För kvinnor var ", ifelse((length(man_storst) > 0),"istället "," "),paste(tolower(kvinna_storst), collapse = ' och '), " vanligare än bland män (",paste(round(kvinna_storst_andel*100), collapse = ' % respektive ')," %).", sep = "")
+  text_fardmedel_kon_sammanfattning <- paste(text_fardmedel_kon_sammanfattning,"För kvinnor var ", ifelse((length(man_storst) > 0),"istället "," "),paste(tolower(kvinna_storst), collapse = ' och '), " vanligare än bland män (",paste(round(kvinna_storst_andel*100), collapse = ' respektive ')," % för kvinnor och ",paste(round(trip_mode_gender_andel_df["Man",kvinna_storst]*100), collapse = ' respektive ')," % för män).", sep = "")
 }
 if (length(lika_stora) == 3) {
   text_fardmedel_kon_sammanfattning <- paste(text_fardmedel_kon_sammanfattning,"Det fanns ingen märkbar skillnad på färdmedelsfördelningen för kvinnor respektive män. ", sep = "")
@@ -1692,13 +1686,13 @@ Under `r paste(min(pers$ar),ifelse(min(pers$ar)!=max(pers$ar),paste("-",max(pers
 
 
 ## Antal resor
-Antalet resor per dygn i `r (rapportomrade_text)` uppgick till `r round(num_trips_all$"Antal resor")`. I genomsnitt gjorde `r round(num_trips_all$"Andel personer som rest (%)")` procent åtminstone en resa per dag. Totalt transporterar de boende sig `r round(sum(reslangd_summa$Trafikarbete_totalt)/1000)` kilometer under en genomsnittsdag summerat över samtliga färdmedel.
+Antalet resor per dygn i `r (rapportomrade_text)` uppgick till `r round(num_trips_all$"Antal resor")`. I genomsnitt gjorde `r round(num_trips_all$"Andel personer som rest (%)")` procent åtminstone en resa per dag. Totalt transporterade de boende sig `r round(sum(reslangd_summa$Trafikarbete_totalt)/1000)` kilometer under en genomsnittsdag summerat över samtliga färdmedel.
 
 ## Färdmedelsfördelning
 
 Färdmedelsfördelningen för det totala antalet resor visas i Figur \@ref(fig:fardmedelsfordelning-diagram) och färdmedelsfördelningen uttryckt i andelar av den totala mängden fordonskilometer presenteras i Figur \@ref(fig:fardmedelsfordelning-km-diagram). Vad gäller andelen resor per färdmedel, framgår att `r tolower(mest_frekvent_fardmedel)` är det vanligaste färdmedlet och används för `r round(mest_frekvent_andel*100)` % av alla resor. Näst vanligast är `r tolower(nast_mest_frekvent_fardmedel)`, vilket utgör `r round(nast_mest_frekvent_andel*100)` % av alla resor. `r ifelse(mest_frekvent_fardmedel==mest_frekvent_fardmedel_km,paste(mest_frekvent_fardmedel,"är också det"),paste("Däremot är",tolower(mest_frekvent_fardmedel_km),"det"))` vanligaste färdmedlet sett till antal fordonskilometer. En `r ifelse(mest_frekvent_fardmedel_km_andel>.75,"övervägande ","")`majoritet (`r round(mest_frekvent_fardmedel_km_andel*100)` %) av fordonskilometrarna, som boende i `r (rapportomrade_text)` förflyttade sig, gjordes med `r tolower(mest_frekvent_fardmedel_km)`.
 
-```{r fardmedelsfordelning-diagram, echo = FALSE, results = "asis", fig.cap = "Resornas färdmedelsfördelning per område."}
+```{r fardmedelsfordelning-diagram, echo = FALSE, results = "asis", fig.cap = "Resornas färdmedelsfördelning sett till antalet resor."}
 #Histogram med resandefrekvens
 resor_barplot <- ggplot(resor_per_individ_summa, aes(factor(Färdmedel, level = ordning_fardmedel), Perc_resor, fill = factor(Färdmedel, level = ordning_fardmedel))) +
     geom_bar(stat = "identity") +
@@ -1719,7 +1713,7 @@ resor_barplot
 ```
 
 
-```{r fardmedelsfordelning-km-diagram, echo = FALSE, results = "asis", fig.cap = "Resornas färdmedelsfördelning per område."}
+```{r fardmedelsfordelning-km-diagram, echo = FALSE, results = "asis", fig.cap = "Resornas färdmedelsfördelning sett till antalet fordonskilometer."}
 #Tabell till diagram
 reslangd_per_fardmedel <- reslangd_summa %>%
   ungroup() %>%
@@ -1755,9 +1749,9 @@ Män och kvinnors resande skiljer sig åt. Män gjorde `r resor_per_dag_man` res
 Andelen cykelresor var högst i åldersgruppen `r mest_cykel_alder`, där `r round(max(trip_age_andel_df$Cykel)*100)` procent av resorna utfördes med cykel. Andelen bilresor var högst i ålderskategorin `r mest_bil_alder`, där `r round(max(trip_age_andel_df$Bil)*100)` procent av resorna utfördes med bil. Den högsta andelen kollektivtrafiksresor gjordes i ålderskategorin `r mest_koll_alder` där `r round(max(trip_age_andel_df$Kollektivtrafik)*100)` procent av resorna utfördes med buss. 
 
 
-## Vanligaste målpunkterna
+## Vanligaste reserelationer
 
-Den vanligaste förekommande resan inom ett område skedde inom `r max_inom` följt av `r max_2_inom`. Mellan två områden var den vanligaste förekommande reserelationen mellan `r max_fran`-`r max_till ` följt av relationen `r max_2_fran`-`r max_2_till `. Den vanligaste tätorten för utpendlingsresor från `r rapportomrade_text` var `r storst_utpendlingstatort``r ifelse(storst_utpendlingstatort==storst_utpendlingskommun,", vilket också var den vanligaste kommunen.",paste0("och den vanligaste kommunen för utpendling var ",storst_utpendlingskommun))`.
+Den vanligaste förekommande resan inom en `r (omradesniva_text)` skedde inom `r max_inom` följt av `r max_2_inom`. Mellan två `r (omradesniva_text_plural)` var den vanligaste förekommande reserelationen mellan `r max_fran`–`r max_till ` följt av relationen `r max_2_fran`–`r max_2_till `. När det gäller målpunkter utanför `r rapportomrade_text`, var den vanligaste tätorten `r storst_utpendlingstatort``r ifelse(storst_utpendlingstatort==storst_utpendlingskommun,", vilket också var den vanligaste kommunen för utpendlingsresor",paste0("och den vanligaste kommunen för utpendlingsresor var ",storst_utpendlingskommun))`.
 
 
 \newpage
@@ -1787,7 +1781,7 @@ Eftersom tabeller, grafer och löptext produceras av ett skript behöver rapport
 
 Kollektivtrafiksbarometerns attityd- och resvaneundersökning är en årlig och nationell enkätundersökning som strävar efter att fånga ett representativt urval av befolkningen i respektive region. För varje respondent lagras egenskaper som kön, ålder och koordinater till hemmet. I denna rapport har resultaten sammanfattats uppdelade geografiskt på `r (omradesniva_text)`.
 
-Ur undersökningen har de `r (antal_individer)` respondenter som bor i `r (rapportomrade_text)` och som svarat på enkäten mellan `r (fran)` och `r (till)` valts ut. Antalet respondenter per månad är redovisat i Tabell \@ref(tab:resp-over-tid).
+Ur undersökningen har de `r (antal_individer)` respondenter som bor i `r (rapportomrade_text)` och som svarat på enkäten mellan `r tolower(fran)` och `r tolower(till)` valts ut. Antalet respondenter per månad är redovisat i Tabell \@ref(tab:resp-over-tid-table).
 
 I Tabell \@ref(tab:svarsfrekvens-table) återfinns befolkning, antal respondenter och andelen svarande av befolkningen. Andelen svarande ska ej förväxlas med svarsfrekvens (hur många av de tillfrågade som valde att svara på enkäten). Respondenternas kön och ålder per område finns redovisade i Tabell \@ref(tab:repondant-table).
 
@@ -1829,7 +1823,7 @@ Notera antalet respondenter per område. För att säkra slutsatser ska kunna dr
 
 # Resultat
 
-Nedan presenteras sammanställningen av resultat från resvaneundersökningen.
+Nedan presenteras en sammanställning av resultat från resvaneundersökningen.
 
 ## Körkort och biltillgång
 
@@ -1865,7 +1859,7 @@ x <- kbl(num_trips_rep, digits = 1, longtable = T, booktabs = T, linesep = "",ca
                 repeat_header_continued = "\\textit{(Fortsätter på nästa sida...)}") %>%
   row_spec(0, bold = T) %>% #gör rubrikraden fetstilt
   column_spec(2:4, width = "2.5cm") %>%
-  column_spec(1:1, width = "2cm") %>%
+  column_spec(1:1, width = "2.1cm") %>%
   column_spec(5:6, width = "1.6cm")
 
 if(nrow(alder_3gr_lagt_underlag) > 0) {x <- footnote(x,symbol = "Baseras på särskilt lågt antal respondenter.")}
@@ -1942,7 +1936,7 @@ gender_plot
 
 ### Färdsätt efter ålder
 
-Åldersgruppen `r num_trips_age$Grupp[1]` utgjorde `r round(100*num_trips_age$Befolkning[1]/sum(num_trips_age$Befolkning))` procent, gruppen `r num_trips_age$Grupp[2]` `r round(100*num_trips_age$Befolkning[2]/sum(num_trips_age$Befolkning))` procent och gruppen `r num_trips_age$Grupp[3]` `r round(100*num_trips_age$Befolkning[3]/sum(num_trips_age$Befolkning))` procent av den undersökta befolkningen. I Figur \@ref(fig:alder-diagram) nedan jämförs färdsättsanvändning i olika åldersgrupper.
+Åldersgruppen `r num_trips_age$Grupp[1]` utgjorde `r round(100*num_trips_age$Befolkning[1]/sum(num_trips_age$Befolkning))` procent, gruppen `r num_trips_age$Grupp[2]` `r round(100*num_trips_age$Befolkning[2]/sum(num_trips_age$Befolkning))` procent och gruppen `r num_trips_age$Grupp[3]` `r round(100*num_trips_age$Befolkning[3]/sum(num_trips_age$Befolkning))` procent av den undersökta befolkningen. I Figur \@ref(fig:alder-diagram) nedan jämförs färdmedelsandelar mellan olika åldersgrupper.
 
 ```{r alder-diagram, echo = FALSE, results = "asis", fig.cap = "Resornas färdmedelsfördelning per åldersgrupp."}
 #skapa Percent stacked barchart
@@ -1966,7 +1960,7 @@ labs(caption = "* Baseras på särskilt lågt antal respondenter.")
 age_plot
 ```
 
-`r ifelse(which.max(trip_age_andel_df$Kollektivtrafik)==1,"De yngsta",paste("Åldersgruppen",mest_koll_alder))` åkte i högre utsträckning med kollektivtrafiken än övriga grupper. `r ifelse(koll_sjunkande,"Kollektivtrafiksandelen sjunker sedan med stigande ålder. ","")``r ifelse(mest_koll_alder==mest_cykel_alder,"Det också","Däremot var det")` åldersgruppen `r mest_cykel_alder` som gjorde fler cykelresor än övriga grupper. Andelen bilresor `r ifelse(bil_okande,"ökar med stigande ålder och ","")` var högst i ålderskategorin `r mest_bil_alder`, där `r round(max(trip_age_andel_df$Bil)*100)` procent av resorna görs med bil.
+`r ifelse(which.max(trip_age_andel_df$Kollektivtrafik)==1,"De yngsta",paste("Åldersgruppen",mest_koll_alder))` åkte i högre utsträckning med kollektivtrafiken än övriga grupper. `r ifelse(koll_sjunkande,"Kollektivtrafiksandelen sjunker sedan med stigande ålder. ","")``r ifelse(mest_koll_alder==mest_cykel_alder,"Det också","Däremot var det")` åldersgruppen `r mest_cykel_alder` som gjorde en större andel cykelresor än övriga grupper. Andelen bilresor `r ifelse(bil_okande,"ökar med stigande ålder och ","")` var högst i ålderskategorin `r mest_bil_alder`, där `r round(max(trip_age_andel_df$Bil)*100)` procent av resorna gjordes med bil.
 
 ### Färdsätt efter sysselsättning
 I åldern 15–85 år var `r round(sys_omrade_totalt$"Förvärvsarbetande/egen företagare"*100)` procent förvärvsarbetande, `r round(sys_omrade_totalt$Studerande*100)` procent studerande, `r round(sys_omrade_totalt$Pensionär*100)` procent var pensionärer. I Figur \@ref(fig:sys-diagram) nedan presenteras färdmedelsfördelningen per sysselsättningsgrupp. `r mest_frekvent_fardmedel` var det vanligaste färdmedlet för samtliga grupper`r ifelse(nrow(avvikande_vanligaste_färdmedel)>0,paste(", förutom för",upprakning(tolower(rownames(avvikande_vanligaste_färdmedel)),10)),"")`. Bil användes i störst utsträckning av gruppen *`r tolower(mest_bil_syss)`* och minst i gruppen *`r tolower(minst_bil_syss)`*. Kollektivtrafiksandelen var högst i gruppen *`r tolower(mest_koll_syss)`*. Störst andel cykelresor stod gruppen *`r tolower(mest_cykel_syss)`* för.
@@ -2004,11 +1998,11 @@ sys_plot
 
 ### Färdsätt efter ärende
 
-Resans *ärende* är syftet med resan och kan bland annat vara *inköp av dagligvaror* eller *arbete*. Kategorierna är valda för att alla typer av resor ska kunna falla in under en kategori. Ifall inget passande ärende finns, kan respondenten välja *annat ärende*.  `r round(100*trip_purpose_mode_df["Annat ärende","Totalt"]/trip_purpose_mode_df["Totalt","Totalt"])` procent av respondenterna har valt att kategorisera sin resa som *annat ärende*.
+Resans *ärende* är syftet med resan och kan bland annat vara *inköp av dagligvaror* eller *arbete*. Kategorierna är valda för att alla typer av resor ska kunna falla in under en kategori. Ifall inget passande ärende finns, kan respondenten välja *annat ärende*.  `r round(100*trip_purpose_mode_df["Annat ärende","Totalt"]/trip_purpose_mode_df["Totalt","Totalt"])` procent av resorna har blivit kategoriserade som *annat ärende*.
 
 Resor till bostaden utgör normalt sett en stor del av alla resor. I denna mätning var andelen resor till bostaden `r round(trips_to_home_share)` procent, medan andelen arbetsresor var `r round(trips_to_work_share)` procent. Av resor till arbetet var `r car_share_work` procent bilresor, `r transit_share_work ` procent kollektivtrafiksresor och `r round(bike_share_work)` procent cykelresor.
 
-I Figur \@ref(fig:arende-diagram) presenteras färdmedelsandelar för respektive ärendetyp. Bil valdes i störst utsträckning för ärendet *`r tolower(mest_bil_syfte)`* (`r round(mest_bil_syfte_andel*100)` %). För ärende *`r tolower(minst_bil_syfte)`* användes dock bil i lägst utsträckning (`r round(minst_bil_syfte_andel*100)` %). Istället gjordes många resor för det ärendet i störst utsträckning med `r tolower(istallet_for_bil)` (`r round(istallet_for_bil_andel*100)` %).
+I Figur \@ref(fig:arende-diagram) presenteras färdmedelsandelar för respektive ärendetyp. Bil valdes i störst utsträckning för ärendet *`r tolower(mest_bil_syfte)`* (`r round(mest_bil_syfte_andel*100)` %). För ärende *`r tolower(minst_bil_syfte)`* användes dock bil i lägst utsträckning (`r round(minst_bil_syfte_andel*100)` %). Istället gjordes dessa resor i större utsträckning med `r tolower(istallet_for_bil)` (`r round(istallet_for_bil_andel*100)` %).
 
 ```{r arende-diagram, echo = FALSE, results = "asis", fig.cap = "Resornas färdmedelsfördelning per ärende"}
 #Skapar diagram för färdmedel per ärende
@@ -2075,12 +2069,12 @@ area_max_fk_km <- area_max_fk["Totalt antal fordonskilometer"]
 area_min_fk_km <- area_min_fk["Totalt antal fordonskilometer"]
 ```
 
-I `r (rapportomrade_text)` är en typisk resa (medianen av alla resor) `r round(reslangd_summa_tot$Median/1000)` kilometer lång. Längst är resorna med `r tolower(langst_resor_fardmedel)`, med en typresa på `r round(langst_resor_fardmedel_varde/1000)` kilometer. Kortast är resorna med `r tolower(kortast_resor_fardmedel)`, med en typresa på `r round(kortast_resor_fardmedel_varde/1000)` km.
+I `r (rapportomrade_text)` var en typisk resa (medianen av alla resor) `r round(reslangd_summa_tot$Median/1000)` kilometer lång. Längst var resorna med `r tolower(langst_resor_fardmedel)`, med en typresa på `r round(langst_resor_fardmedel_varde/1000)` kilometer. Kortast var resorna med `r tolower(kortast_resor_fardmedel)`, med en typresa på `r round(kortast_resor_fardmedel_varde/1000)` km.
 
-`r (mest_frekvent_fardmedel_km)` är det vanligaste färdmedlet med `r round(mest_frekvent_fardmedel_km_varde/1000)*1000` fordonskilometer, vilket motsvarar `r round(mest_frekvent_fardmedel_km_andel*100)` % av det totala antalet fordonskilometrar för samtliga trafikslag för boende i `r (rapportomrade_text)`.
+`r (mest_frekvent_fardmedel_km)` var det vanligaste färdmedlet med `r round(mest_frekvent_fardmedel_km_varde/1000)` fordonskilometer, vilket motsvarar `r round(mest_frekvent_fardmedel_km_andel*100)` % av det totala antalet fordonskilometrar för samtliga trafikslag för boende i `r (rapportomrade_text)`.
 
-För boende i `r area_shortest_trips$Område` är en typisk resa särskilt kort (`r area_shortest_trips$Median` km). De längsta resorna återfinns i `r area_longest_trips$Område`, med en typresa på `r area_longest_trips$Median` kilometer.
-I `r area_max_fk$Område` görs den största sammanlagda förflyttningen med `r round(area_max_fk_km) ` fordonskilometer, medan `r area_min_fk$Område` står för det minsta antalet fordonskilometer (`r round(area_min_fk_km)` km)
+För boende i `r area_shortest_trips$Område` var en typisk resa särskilt kort (`r area_shortest_trips$Median` km). De längsta resorna återfanns i `r area_longest_trips$Område`, med en typresa på `r area_longest_trips$Median` kilometer.
+I `r area_max_fk$Område` gjordes den största sammanlagda förflyttningen med `r round(area_max_fk_km) ` fordonskilometer, medan `r area_min_fk$Område` stod för det minsta antalet fordonskilometer (`r round(area_min_fk_km)` km)
 
 
 ```{r reslangd-per-omrade-tabell, echo = FALSE, results = "asis"}
@@ -2116,12 +2110,12 @@ agg_rvu_avs_df <- agg_rvu_avs %>%
   select(!(avstand))
 
 mest_bil_avstand <- rownames(agg_rvu_avs_df)[which.max(agg_rvu_avs_df$Bil)]
-mest_tag_avstand <- rownames(agg_rvu_avs_df)[which.max(agg_rvu_avs_df$Tag)]
+mest_tag_avstand <- rownames(agg_rvu_avs_df)[which.max(agg_rvu_avs_df$Tåg)]
 mest_cykel_avstand <- rownames(agg_rvu_avs_df)[which.max(agg_rvu_avs_df$Cykel)]
 
 ```
 
-I Figur \@ref(fig:avstand-diagram) nedan presenteras färdmedelsfördelning per reslängd. Andelen resor som genomförs med bil är störst vid `r mest_bil_avstand` kilometer. Andelen resor med tåg är störst vid `r mest_tag_avstand`. Cykelandelen är som högst för resor på ca `r mest_cykel_avstand` km och sjunker sedan successivt med ökat avstånd.
+I Figur \@ref(fig:avstand-diagram) nedan presenteras färdmedelsfördelning per reslängd. Andelen resor som genomfördes med bil var störst vid ett avstånd på `r mest_bil_avstand` kilometer. Andelen resor med tåg var störst vid ett avstånd på `r mest_tag_avstand` kilometer. Cykelandelen var som högst för resor på ca `r mest_cykel_avstand` kilometer och sjönk sedan successivt med ökat avstånd.
 
 ```{r avstand-diagram, echo = FALSE, results = "asis", fig.cap = "Resornas färdmedelsfördelning per avståndsklass."}
 #Lägger till avståndsklass per resa
@@ -2146,10 +2140,10 @@ avstand_plot
 
 ### Reserelationer inom `r (rapportomrade_rubrik)`
 
-`r round(100*antal_resor_inom/antal_resor_tot_filtrerade)` procent av resorna sker inom `r (rapportomrade_text)`. Den vanligaste förekommande resan inom ett område sker i  `r (max_inom)`, vilket motsvarar `r round(100*max_inom_varde)` procent av resorna. Den vanligaste resan mellan två områden är från `r (max_fran)` till `r (max_till)` med `r round(100*max_till_fran_varde)` procent av resor. I Tabell \@ref(tab:od-matrix-table) framgår de vanligaste reserelationerna inom `r (rapportomrade_text)` och dess andelar av det totala antalet resorna inom `r (rapportomrade_text)`. Notera att det finns ett bortfall på `r 100-round(100*antal_resor_tot_filtrerade/antal_resor_tot)` procent i underlaget på grund av att vissa resor saknar information om avrese- eller ankomstplats.
+`r round(100*antal_resor_inom/antal_resor_tot_filtrerade)` procent av resorna som boende i `r (rapportomrade_text)` gjorde, skedde inom `r (rapportomrade_text)`. Den vanligaste förekommande resan inom en `r omradesniva_text` skedde i  `r (max_inom)`, vilket motsvarar `r round(100*max_inom_varde)` procent av alla resor. Den vanligaste resan mellan två `r omradesniva_text_plural` var från `r (max_fran)` till `r (max_till)` motsvarande `r round(100*max_till_fran_varde)` procent av alla resor. I Tabell \@ref(tab:od-matrix-table) framgår de vanligaste reserelationerna inom `r (rapportomrade_text)` och dess andelar av det totala antalet resor. Observera att det finns ett bortfall på `r 100-round(100*antal_resor_tot_filtrerade/antal_resor_tot)` procent i underlaget på grund av att vissa resor saknar information om avrese- eller ankomstplats.
 
 ```{r od-matrix-table, echo = FALSE, result="asis"}
-x <- kable(od_matrix_perc, caption = "Fördelning av resorna inom rapportområdet. Radrubrik visar var resar börjar och kolumnrubriker visar var resan slutar.", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
+x <- kable(od_matrix_perc, caption = paste0("Fördelning av resorna inom ",rapportomrade_text,". Radrubriker visar var resar börjar och kolumnrubriker visar var resan slutar."), booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
   kable_styling(latex_options = c("striped", "HOLD_position"),
                 full_width = TRUE) %>%
   row_spec(nrow(od_matrix_perc), bold = T) %>% #gör Total-raden fetstilt
@@ -2163,7 +2157,7 @@ x
 ```
 ### Utpendling från `r (rapportomrade_rubrik)`
 
-Av alla resor som utgår från `r (rapportomrade_rubrik)`, görs `r round((1-andel_inom)*100)` procent till andra områden. Nedan sammanställs utpendlingen för boende i `r (rapportomrade_rubrik)` uttryckt som andelar av resorna som startar i `r (rapportomrade_rubrik)`. I Figur \@ref(fig:utpendling-tatort-diagram) redovisas utpendlingen till andra tätorter och i Figur \@ref(fig:utpendling-kommun-diagram) till andra kommuner. Den vanligaste tätorten för utpendlingsresor var `r storst_utpendlingstatort``r ifelse(storst_utpendlingstatort==storst_utpendlingskommun,", vilket också var den vanligaste kommunen.",paste0(" och den vanligaste kommunen för utpendling var ",storst_utpendlingskommun))`. Anledningen till att inte inpendling kan redovisas är att urvalet ur resvaneundersökningen enbart omfattar boende i `r (rapportomrade_rubrik)`.
+Av alla resor som utgår från `r (rapportomrade_rubrik)`, görs `r round((1-andel_inom)*100)` procent till andra områden. Nedan sammanställs utpendlingen för boende i `r (rapportomrade_rubrik)` uttryckt som andelar av resorna som startar i `r (rapportomrade_rubrik)`. I Figur \@ref(fig:utpendling-tatort-diagram) redovisas utpendlingen till andra tätorter och i Figur \@ref(fig:utpendling-kommun-diagram) till andra kommuner. Den vanligaste tätorten för utpendlingsresor var `r storst_utpendlingstatort``r ifelse(storst_utpendlingstatort==storst_utpendlingskommun,", vilket också var den vanligaste kommunen för utpendlingsresor",paste0(" och den vanligaste kommunen för utpendling var ",storst_utpendlingskommun))`. Anledningen till att inte inpendling kan redovisas är att urvalet ur resvaneundersökningen enbart omfattar boende i `r (rapportomrade_rubrik)`.
 
 ```{r utpendling-tatort-diagram, echo = FALSE, result="asis", fig.cap = paste0("Andel utpendlingsresor från ",rapportomrade_rubrik," till andra tätorter.")}
 utpendling_tatort_barplot <- ggplot(utpendling_tatort, aes(factor(stop_tatort_namn, level = stop_tatort_namn), perc, fill = factor(stop_tatort_namn, level = stop_tatort_namn))) +
@@ -2181,15 +2175,19 @@ utpendling_tatort_barplot <- ggplot(utpendling_tatort, aes(factor(stop_tatort_na
 
 utpendling_tatort_barplot
 ```
+ 
+ 
 
 ```{r utpendling-kommun-diagram, echo = FALSE, result="asis", fig.cap = paste0("Andel utpendlingsresor från ",rapportomrade_rubrik," till andra kommuner.")}
 utpendling_kommun_barplot <- ggplot(utpendling_kommun, aes(factor(stop_kommun_namn, level = stop_kommun_namn), perc, fill = factor(stop_kommun_namn, level = stop_kommun_namn))) +
     geom_bar(stat = "identity") +
     rvu_theme() +
-    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
     coord_cartesian(xlim = c(1,nrow(utpendling_kommun))) +
+    # scale_fill_manual(values=rev(palett)) +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+    
     geom_text(aes(label=percent(perc, 1)),size = 3, position=position_dodge(width=0.9), vjust=-0.25) + #etiketter
-    scale_fill_manual(values=rev(palett)) +
+    
     labs(
         x = "Resmål",
         y = "Andel resor",
@@ -2198,15 +2196,17 @@ utpendling_kommun_barplot <- ggplot(utpendling_kommun, aes(factor(stop_kommun_na
 
 utpendling_kommun_barplot
 ```
+ 
+ 
 \newpage
 
 # Bilagor
 
 ## Karta
 
-Nedan följer en karta över de områden som `r (rapportomrade_text)` inbegriper.
+Nedan följer en karta över de `r (omradesniva_text_plural)` som `r (rapportomrade_text)` inbegriper.
 
-![Karta över alla områden i RVU:n]("karta_omraden.png")
+![Karta över alla områden i rapporten.]("karta_omraden.png")
 
 ```{r karta-table, echo=FALSE, results= "asis"}
 
