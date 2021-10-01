@@ -4,8 +4,8 @@ date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 output:
   
-  bookdown::pdf_document2: 
   bookdown::html_document2:
+  bookdown::pdf_document2: 
 header-includes:
   - \renewcommand{\contentsname}{Innehållsförteckning}
   - \renewcommand{\figurename}{Figur }
@@ -44,7 +44,7 @@ rapportomrade <- c("Bålsta", "Bålsta Skärplinge") #"Uppsala län" #Sträng el
 rapportomrade_text <- "Bålsta" #"Region Uppsala"  #namn på området som skrivs i löptexten
 rapportomrade_rubrik <- "Bålsta tätort" #"Region Uppsala" #namn på området som skrivs i rubriker
 rapportniva <- "tatort" #'kommun' #'lan' #vilken geografisk avgränsning rapporten har
-omradesniva <- 'deso' #"deso" #'kommun' #'tatort' #vilken områdesnivån som resultaten ska redovisas på. Om rapportområdet är en region, bör kommun väljas och om det är en tätort bör deso väljas osv...
+omradesniva <- 'deso' #"deso" #'kommun' #vilken områdesnivån som resultaten ska redovisas på. Om rapportområdet är en region, bör kommun väljas och om det är en tätort bör deso väljas osv...
 #Agränsning i tid
 starttid <- 202101 #YYYYMM
 sluttid <- 202108 #YYYYMM
@@ -2206,7 +2206,7 @@ utpendling_kommun_barplot
 
 Nedan följer en karta över de `r (omradesniva_text_plural)` som `r (rapportomrade_text)` inbegriper.
 
-![Karta över alla områden i rapporten.]("karta_omraden.png")
+![Karta över alla områden i rapporten.](karta_omraden.png)
 
 ```{r karta-table, echo=FALSE, results= "asis"}
 
@@ -2485,62 +2485,6 @@ if(nrow(omraden_lagt_underlag) > 0) {x <- footnote(x,symbol = "Baseras på särs
 x
 ```
 
-```{r distance_mode, echo=FALSE, include=FALSE}
-# #Kod till tabell med antal resor per reslängdsklass
-# rvu_distance_below_1 <- rvu %>% 
-#   select(avstand, fardmedel) %>%
-#   filter(!is.na(fardmedel)) %>%
-#   group_by(avstand = cut(avstand, breaks = c(0, 1000))) %>%
-#   summarize("Alla färdsätt" = n(),
-#             "Bil" = sum(fardmedel == 2),
-#             "Buss" = sum(fardmedel == 1),
-#             "Cykel" = sum(fardmedel == 4),
-#             "Gång" = sum(fardmedel == 5))
-#   
-# rvu_distance_below_3 <- rvu %>% 
-#   select(avstand, fardmedel) %>%
-#   filter(!is.na(fardmedel)) %>%
-#   group_by(avstand = cut(avstand, breaks = c(0, 3000))) %>%
-#   summarize("Alla färdsätt" = n(),
-#             "Bil" = sum(fardmedel == 2),
-#             "Buss" = sum(fardmedel == 1),
-#             "Cykel" = sum(fardmedel == 4),
-#             "Gång" = sum(fardmedel == 5))
-# 
-# rvu_distance_below_5 <- rvu %>% 
-#   select(avstand, fardmedel) %>%
-#   filter(!is.na(fardmedel)) %>%
-#   group_by(avstand = cut(avstand, breaks = c(0, 5000))) %>%
-#   summarize("Alla färdsätt" = n(),
-#             "Bil" = sum(fardmedel == 2),
-#             "Buss" = sum(fardmedel == 1),
-#             "Cykel" = sum(fardmedel == 4),
-#             "Gång" = sum(fardmedel == 5))
-#   
-# rvu_distance_below_10 <- rvu %>% 
-#   select(avstand, fardmedel) %>%
-#   filter(!is.na(fardmedel)) %>%
-#   group_by(avstand = cut(avstand, breaks = c(0, 10000))) %>%
-#   summarize("Alla färdsätt" = n(),
-#             "Bil" = sum(fardmedel == 2),
-#             "Buss" = sum(fardmedel == 1),
-#             "Cykel" = sum(fardmedel == 4),
-#             "Gång" = sum(fardmedel == 5))
-#   
-# 
-# rvu_distance <- bind_rows(slice(rvu_distance_below_1, 1), 
-#                           slice(rvu_distance_below_3, 1),
-#                           slice(rvu_distance_below_5, 1),
-#                           slice(rvu_distance_below_10, 1))
-# rvu_distance$avstand <- c("<=1km", "<=3km", "<=5km", "<=10km") 
-# rvu_distance <- rvu_distance %>% rename("Reslängd" = avstand)
-
-              
-```
-
-```{r distance-mode-table, echo = FALSE, results = "asis"}
-# #Tabell med antal resor per reslängdsklass
-# kable(rvu_distance, caption = "Reslängd per färdsätt", booktabs = T, linesep = "",format.args = list( big.mark = " ")) %>%
-#   kable_styling(latex_options = c("striped", "HOLD_position")) %>%
-#   row_spec(0, bold = T) #gör rubrikraden fetstilt
+```{r sista, echo = FALSE, results = "asis"}
+gc()
 ```
