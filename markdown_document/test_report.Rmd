@@ -70,12 +70,12 @@ title: Resvaneundersökning i `r rapportomrade_rubrik`
   "knitr", "kableExtra", "tidyverse", "readxl", "bookdown", "pxweb", "scales", "stringi", "leaflet", "sf", "mapview", "processx", "tinytex", "jsonlite", "htmltools", "webshot", "jsontools", "farver")
   
   for (pack in required_packages_list){
-    if(pack %in% installed.packages() == FALSE){install.packages(pack)}
+    if(pack %in% installed.packages() == FALSE){install.packages(pack, repos = "https://cloud.r-project.org/")}
   }
 
 
 lapply(required_packages_list, require, character.only = TRUE)
-#update.packages(ask = FALSE, checkBuilt = TRUE, repos = "http://cran.us.r-project.org")
+#update.packages(ask = FALSE, checkBuilt = TRUE, repos = "https://cloud.r-project.org/")
 
 if(is_tinytex() == FALSE){tinytex::install_tinytex()}
 tinytex::tlmgr_update()
