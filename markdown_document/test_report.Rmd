@@ -658,6 +658,8 @@ kortast_resor_fardmedel_varde <- min(reslangd_summa$Median)
 ```
 
 ```{r fardmedelsfordelning_text, echo=FALSE, include=FALSE}
+max_antal_uppräknade <- 3 #hur många områden som maximalt ska lyftas fram
+
 #Transformerar till dataframe
 trip_person_mode_max <- trip_mode %>%
   as.data.frame() %>%
