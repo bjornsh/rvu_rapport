@@ -61,9 +61,9 @@ Under exekveringen kommer de paket som inte är installerade på datorn att inst
 ### Krav på indata i skriptet
 I skriptet finns det några variabler som behöver specificeras innan körningen och möjliggör att skriptet kan användas i olika sammanhang och geografier samt att dataanalysen kan göras med olika förutsättningar. Alla dessa specificeringar görs i den del av koden som ligger i den R chunk som heter *indata*. Det ligger precis efter kodens *preamble* som används av LaTeX för att specificera dokumentets format.
 
-* *rapportomrade*: en vektor av en eller flera strängar som definierar rapportens intresseområde. Detta används i dataanalysen, t.ex. i filtreringar av datat. T.ex. "Uppsala län" eller c("Bålsta", "Bålsta Skärplinge")
-* *rapportomrade_text*: en sträng som används i löptext när man refererar till rapportens intresseområde. T.ex. "Bålsta"
-* *rapportomrade_rubrik*: en sträng som används i rubriker (t.ex. i rapportens titel) när man refererar till rapportens intresseområde. T.ex. "Bålsta tätort"
+* *rapportomrade*: en vektor av en eller flera strängar som definierar rapportens intresseområde. Detta används i filtrering av data. T.ex. "Uppsala län" eller c("Bålsta", "Bålsta Skärplinge"). Strängen måste stämma överens med områdena som finns omnämnda i textform i områdeskolumnerna i rvu.csv och pers.csv (någon av respektive kolumn som börjar med start_* stop_* och bostad_*).
+* *rapportomrade_text*: en sträng som används i löptext när man refererar till rapportens intresseområde. T.ex. "Bålsta". Strängen är oberoende övriga indata.
+* *rapportomrade_rubrik*: en sträng som används i rubriker (t.ex. i rapportens titel) när man refererar till rapportens intresseområde. T.ex. "Bålsta tätort". Strängen är oberoende övriga indata.
 * *rapportniva*: en sträng som definierar rapportens geografiska avgränsningen. Tre möjliga värden finns, *tatort*, *kommun*, eller *lan*.
 * *omradesniva*: en sträng som definierar den geografiska indelningen som resultatet ska redovisas på. Två möjliga värden finns, *deso* eller *kommun*. Om rapportområdet är en region, bör *kommun* väljas och om det är en kommun eller tätort bör *deso* väljas.
 * *starttid*: ett 6-siffrigt heltal som definierar starttiden för filtreringen av data, i format YYYYMM
@@ -72,6 +72,7 @@ I skriptet finns det några variabler som behöver specificeras innan körningen
 * *table_api_address*: en sträng som definierar länk till SCB-tabell som ska användas för befolkningsmängd. "http://api.scb.se/OV0104/v1/doris/en/ssd/BE/BE0101/BE0101Y/FolkmDesoAldKonN" bör användas, då inläsningen av befolkningsmängden är hårdkodad för denna API.
 * *sokvag*: en sträng som definierar sökvägen till csv-indatafilerna. Lämnas strängen tom, används skriptets mapp som sökväg
 * *lagt_underlag*: en siffra som fungerar som gräns till vad som ska anses som lågt antal respondenter i dataanalysen. Alla resultat som baseras på antal respondenter under denna gräns kommer att markeras i rapporten.
+* *ordning_fardmedel*: en vektor som specificerar färdmedlen i den ordning som de ska visas i olika grafer. Namnen för färdmedlen behöver vara identisk med namnet i kolumn *fardmedel.kat* i rvu.csv.
 
 ### Att köra verktyget
 För att köra verktyget krävs det att indatat uppdateras. Sedan ska användaren trycka på *Knit* i R-Studio. Som standard exporteras en PDF rapport. Det är dock också möjligt att välja HTML som format.

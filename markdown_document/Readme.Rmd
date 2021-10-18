@@ -3,8 +3,8 @@ title: "Verktyg för RVU-rapport från Kollbar-data"
 author: "Nikos Papakatsikas"
 date: '2021-09-29'
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -65,17 +65,22 @@ Under exekveringen kommer de paket som inte är installerade på datorn att inst
 ### Krav på indata i skriptet
 I skriptet finns det några variabler som behöver specificeras innan körningen och möjliggör att skriptet kan användas i olika sammanhang och geografier samt att dataanalysen kan göras med olika förutsättningar. Alla dessa specificeringar görs i den del av koden som ligger i den R chunk som heter *indata*. Det ligger precis efter kodens *preamble* som används av LaTeX för att specificera dokumentets format.
 
-* *rapportomrade*: en vektor av en eller flera strängar som definierar rapportens intresseområde. Detta används i dataanalysen, t.ex. i filtreringar av datat. T.ex. "Uppsala län" eller c("Bålsta", "Bålsta Skärplinge")
+* *rapportomrade*: en vektor av en eller flera strängar som definierar rapportens intresseområde. Detta används i dataanalysen, t.ex. i filtreringar av data. T.ex. "Uppsala län" eller c("Bålsta", "Bålsta Skärplinge")
 * *rapportomrade_text*: en sträng som används i löptext när man refererar till rapportens intresseområde. T.ex. "Bålsta"
 * *rapportomrade_rubrik*: en sträng som används i rubriker (t.ex. i rapportens titel) när man refererar till rapportens intresseområde. T.ex. "Bålsta tätort"
 * *rapportniva*: en sträng som definierar rapportens geografiska avgränsningen. Tre möjliga värden finns, *tatort*, *kommun*, eller *lan*.
 * *omradesniva*: en sträng som definierar den geografiska indelningen som resultatet ska redovisas på. Två möjliga värden finns, *deso* eller *kommun*. Om rapportområdet är en region, bör *kommun* väljas och om det är en kommun eller tätort bör *deso* väljas.
 * *starttid*: ett 6-siffrigt heltal som definierar starttiden för filtreringen av data, i format YYYYMM
 * *sluttid*: ett 6-siffrigt heltal som definierar sluttiden för filtreringen av data, i format YYYYMM
-* *palett*: en vektor av sträng med HTML-färgkoder av olika färger som ska användas i diagramm. Vektorn behöver innehålla minst sex färger. T.ex. Region Uppsalas färgskala: c("#5144d3","#53a17f","#3599d5","#e6ad00","#d57667","#9e1863")
 * *table_api_address*: en sträng som definierar länk till SCB-tabell som ska användas för befolkningsmängd. "http://api.scb.se/OV0104/v1/doris/en/ssd/BE/BE0101/BE0101Y/FolkmDesoAldKonN" bör användas, då inläsningen av befolkningsmängden är hårdkodad för denna API.
-* *sokvag*: en sträng som definierar sökvägen till csv-indatafilerna. Lämnas strängen tom, används skriptets mapp som sökväg
+* *sokvag*: en sträng som definierar sökvägen till csv-indatafilerna. Lämnas strängen tom, används skriptets mapp som sökväg. T.ex. *"H:\\Projekt\\Bålsta*
+* *filnamn_rvu*: en sträng som tillsammans med *sokvag* pekar på csv-filen med resor. Kan även vara en undermapp till *sokvag*. T.ex. *"Indatafiler\\rvu_håbo2021.csv"*
+* *filnamn_pers*: en sträng som tillsammans med *sokvag* pekar på csv-filen med respondenter. Kan även vara en undermapp till *sokvag*. T.ex. *"Indatafiler\\person_håbo2021.csv"*
+* *filnamn_restid*: en sträng som tillsammans med *sokvag* pekar på csv-filen med restider. Kan även vara en undermapp till *sokvag*. T.ex. *"Indatafiler\\restid_håbo2021.csv"*
 * *lagt_underlag*: en siffra som fungerar som gräns till vad som ska anses som lågt antal respondenter i dataanalysen. Alla resultat som baseras på antal respondenter under denna gräns kommer att markeras i rapporten.
+* *ordning_fardmedel*:  Vilken ordning som färdmedlen ska räknas upp. T.ex. *c("Bil","Tåg","Buss","Cykel","Gång","Annat")*
+* *palett*: en vektor av sträng med HTML-färgkoder av olika färger som ska användas i diagramm. Vektorn behöver innehålla minst sex färger. Och används på för respektive färdmedel på samma position. T.ex. Region Uppsalas färgskala: *c("#5144d3","#53a17f","#3599d5","#e6ad00","#d57667","#9e1863")*
+* *lagt_underlag*: Hur många områden som maximalt ska lyftas fram i texten vid uppräkning. Exempelvis om körkortsinnehavet är extremt högt i tre områden och lagt_underlag är satt till 2, då nämns bara topp två. Anges som ett positivt heltal.
 
 ### Att köra verktyget
 För att köra verktyget krävs det att indatat uppdateras. Sedan ska användaren trycka på *Knit* i R-Studio. Som standard exporteras en PDF rapport. Det är dock också möjligt att välja HTML som format.
