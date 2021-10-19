@@ -42,9 +42,9 @@ header-includes:
 ```{r indata, echo=FALSE, include = FALSE}
 #Nedan specificeras indata/globala parametrar
 #Definierar om respondenter ska delas upp på kommun, tätort eller deso-nivå:
-rapportomrade <- c("Bålsta", "Bålsta Skärplinge") #c("Bålsta", "Bålsta Skärplinge") #"Uppsala län" #Sträng eller array över områden som inkluderas
-rapportomrade_text <- "Bålsta" #"Bålsta" #"Uppsala län"  #namn på området som skrivs i löptexten
-rapportomrade_rubrik <- "Bålsta tätort" #"Bålsta tätort" #"Uppsala län" #namn på området som skrivs i rubriker
+rapportomrade <- "Uppsala" #c("Bålsta", "Bålsta Skärplinge") #c("Bålsta", "Bålsta Skärplinge") #"Uppsala län" #Sträng eller array över områden som inkluderas
+rapportomrade_text <- "Uppsala kommun" #"Bålsta" #"Uppsala län"  #namn på området som skrivs i löptexten
+rapportomrade_rubrik <- "Uppsala kommun" #"Bålsta tätort" #"Uppsala län" #namn på området som skrivs i rubriker
 rapportniva <- 'tatort' #"tatort" #'kommun' #'lan' #vilken geografisk avgränsning rapporten har
 omradesniva <- 'deso' #"deso" #'kommun' #vilken områdesnivån som resultaten ska redovisas på. Om rapportområdet är en region, bör kommun väljas och om det är en tätort bör deso väljas osv...
 #Agränsning i tid
@@ -55,9 +55,9 @@ table_api_address = "http://api.scb.se/OV0104/v1/doris/en/ssd/BE/BE0101/BE0101Y/
 #Sökväg för indatfiler:
 sokvag <- ""#"H:\\Projekt\\Bålsta RVU\\R\\rvu_rapport\\markdown_document\\" #Tom sträng eller mappsökväg
 #Filnamn för indatafiler
-filnamn_rvu <- "rvu_håbo2021.csv"
-filnamn_pers <- "person_håbo2021.csv"
-filnamn_restid <- "restid_håbo2021.csv"
+filnamn_rvu <- "rvu_uppsala2021.csv"
+filnamn_pers <- "person_uppsala2021.csv"
+filnamn_restid <- "restid_uppsala2021.csv"
 filnamn_shape_tatort <- "To2018_Swe99TM.shp"
 filnamn_shape_kommun <- "KommunSweref99TM\\Kommun_Sweref99TM_region.shp"
 #Gräns för vad som räknas som litet underlag
@@ -220,6 +220,11 @@ rvu <- rvu %>%
 avst <- avst %>%
   filter(respondentid %in% pers$respondentid)
 
+#Felkontroll
+if (nrow(pers)==0) {
+  stop("All data blev bortfiltrerad. Kontrollera att rapportområde och datumstämplar är korrekta i indata!")
+}
+
 #Räknar ut hur många områden som har för litet underlag
 omraden_lagt_underlag <- pers %>%
   mutate(Omrade = ifelse(is.na(Omrade), "Ej angivet", Omrade)) %>%
@@ -312,6 +317,11 @@ scb_befolkning <- scb_befolkning %>%
 respondent2omrade <- pers %>%
   select(respondentid, Omrade, Omrade_kod) %>%
   left_join(scb_befolkning, by = c("Omrade_kod" = "Omrade_kod"))
+
+#Felkontroll
+if (nrow(respondent2omrade)==0) {
+  stop("Områdeskoderna i indata stämmer inte överens med områdeskoderna i API:et!")
+}
 
 rvu <- rvu %>%
   left_join(select(respondent2omrade, c(respondentid,Omrade,Omrade_kod)), by = c("respondentid" = "respondentid"))
@@ -838,7 +848,7 @@ od_matrix <- od_matrix %>%
 #Filtrerar bort kolumner
 lista_med_omraden <- pull(od_matrix,start_omrade_namn)
 od_matrix <- od_matrix %>%
-  select(start_omrade_namn,lista_med_omraden[1:minsta_antal],Totalt) %>%
+  select(start_omrade_namn,lista_med_omraden[0:minsta_antal+1],Totalt) %>%
   rename("Från område" = start_omrade_namn) %>%
   mutate("Övriga områden" = -rowSums(select_if(., is.numeric), na.rm = TRUE)+2*Totalt) %>%
   relocate(Totalt, .after = "Övriga områden")
@@ -886,11 +896,14 @@ max_2 <- which(od_matrix_plain_diag == max_2_inom_varde, arr.ind = TRUE)
 max_2_inom <- rownames(od_matrix_plain)[max_2[,1]]
 if (length(max_2_inom)>1) {max_2_inom <- upprakning(max_2_inom,max_antal_uppraknade = 10)}
 
+#Filtrerar bort områden med få observationer som inte är med i urvalet
+valda_omraden_lagt_underlag <- intersect(omraden_lagt_underlag$Omrade,rownames(od_matrix_andelar))
+
 #Skapar procent-matris och lägger på asterisker om det är ett för litet urval
 od_matrix_perc <- mutate(od_matrix_andelar,across(where(is.numeric), ~percent(.x, accuracy = 1))) %>%
-  rename_with(~str_c(.,"*"), omraden_lagt_underlag$Omrade) %>%
+  rename_with(~str_c(.,"*"), valda_omraden_lagt_underlag) %>%
   rownames_to_column('Område') %>%
-  mutate(Område = ifelse(Område %in% omraden_lagt_underlag$Omrade,paste0(Område,"*"),Område)) %>%
+  mutate(Område = ifelse(Område %in% valda_omraden_lagt_underlag,paste0(Område,"*"),Område)) %>%
   `rownames<-`(.[,1]) %>% #skapar indexkolumn
   select(!(Område))
 
@@ -1468,7 +1481,7 @@ if (num_trips_gender_df["Man","Resor per dag och person (enbart de som rest)"] >
   kön2b <- "män"
 }
 
-ifelse(kön1a!=kön1b,konjunktion2 <- "däremot")
+ifelse(kön1a!=kön1b,konjunktion2 <- "däremot","")
 
 if (avvikelse>0.032) {
   text_kon <- paste(text_kon, "Bland de som reser var ",konjunktion2," antalet resor per dag större bland ",kön1b," än bland ",kön2b,". ",sep="")
@@ -2205,7 +2218,7 @@ area_max_fk_km <- as.numeric(area_max_fk["Totalt antal färdmedelskilometer"])
 area_min_fk_km <- as.numeric(area_min_fk["Totalt antal färdmedelskilometer"])
 ```
 
-I `r (rapportomrade_text)` var en medianresa `r round(reslangd_summa_tot$Median/1000)` kilometer lång. Längst var resorna med `r tolower(langst_resor_fardmedel)`, med en medianresa på `r round(langst_resor_fardmedel_varde/1000)` kilometer. Kortast var resorna med `r tolower(kortast_resor_fardmedel)`, med en medianresa på `r round(kortast_resor_fardmedel_varde/1000)` kilometer. `r ifelse(nrow(fardmedel_lagt_underlag) > 0,paste0("Notera att ",upprakning(tolower(fardmedel_lagt_underlag$Färdmedel),7)," har väldigt få observationer. Slutsatserna om dessa färdmedel bör tas med försiktighet."))`
+I `r (rapportomrade_text)` var en medianresa `r round(reslangd_summa_tot$Median/1000)` kilometer lång. Längst var resorna med `r tolower(langst_resor_fardmedel)`, med en medianresa på `r round(langst_resor_fardmedel_varde/1000)` kilometer. Kortast var resorna med `r tolower(kortast_resor_fardmedel)`, med en medianresa på `r round(kortast_resor_fardmedel_varde/1000)` kilometer. `r ifelse(nrow(fardmedel_lagt_underlag) > 0,paste0("Notera att ",upprakning(tolower(fardmedel_lagt_underlag$Färdmedel),7)," har väldigt få observationer. Slutsatserna om dessa färdmedel bör tas med försiktighet."),"")`
 
 `r (mest_frekvent_fardmedel_km)` var det vanligaste färdmedlet med en total sammanlagd ressträcka på `r round(mest_frekvent_fardmedel_km_varde/1000)` kilometer, vilket motsvarar `r round(mest_frekvent_fardmedel_km_andel*100)` procent av den totala ressträckan för samtliga trafikslag för boende i `r (rapportomrade_text)`.
 
