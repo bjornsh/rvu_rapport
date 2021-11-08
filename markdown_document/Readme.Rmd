@@ -65,7 +65,7 @@ Under exekveringen kommer de paket som inte är installerade på datorn att inst
 ### Krav på indata i skriptet
 I skriptet finns det några variabler som behöver specificeras innan körningen och möjliggör att skriptet kan användas i olika sammanhang och geografier samt att dataanalysen kan göras med olika förutsättningar. Alla dessa specificeringar görs i den del av koden som ligger i den R chunk som heter *indata*. Det ligger precis efter kodens *preamble* som används av LaTeX för att specificera dokumentets format.
 
-* *rapportomrade*: en vektor av en eller flera strängar som definierar rapportens intresseområde. Detta används i dataanalysen, t.ex. i filtreringar av data. T.ex. "Uppsala län" eller c("Bålsta", "Bålsta Skärplinge")
+* *rapportomrade*: en vektor av en eller flera strängar som definierar rapportens intresseområde. Detta används i dataanalysen och namnet måste överrensstämma med det namn som används i indatatabellerna. T.ex. "Uppsala län" eller c("Bålsta", "Bålsta Skärplinge")
 * *rapportomrade_text*: en sträng som används i löptext när man refererar till rapportens intresseområde. T.ex. "Bålsta"
 * *rapportomrade_rubrik*: en sträng som används i rubriker (t.ex. i rapportens titel) när man refererar till rapportens intresseområde. T.ex. "Bålsta tätort"
 * *rapportniva*: en sträng som definierar rapportens geografiska avgränsningen. Tre möjliga värden finns, *tatort*, *kommun*, eller *lan*.

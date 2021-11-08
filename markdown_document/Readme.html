@@ -183,17 +183,17 @@ pre code {
 </div>
 <div id="skriptanvändning" class="section level2">
 <h2>Skriptanvändning</h2>
-<div id="krav-på-datat" class="section level3">
-<h3>Krav på datat</h3>
+<div id="krav-på-data" class="section level3">
+<h3>Krav på data</h3>
 <p>Indata från kollektivtrafiksbarometern tillhandahålls av Region Uppsala så att de är i lämplig format. Detta försäkras med Regionens egna skript och beskrivs alltså inte här. Indatat ligger i tre filer, <em>rvu.csv</em>, <em>pers.csv</em>, och <em>avst.csv</em>.</p>
 <p>Skriptet anropar SCBs API verktyg för att hämta befolkningsdata i de undersökta områdena.</p>
-<p>Det krävs dessutom en shapefil, antingen med DESO-områden eller med kommuner, beroende på vilken geografisk aggreggering rapporten ska tas fram för. Detta används för att skapa en karta med den geografiska indelningen av det undersökta området. Om rapporten delas upp på DESO-områden, bör ett geopaket finnas som en .gpkg-fil (DeSO_2018_v2.gpkg). Om rapporten delas upp på kommunnivå, bör kartfiler finnas i en mapp med .shp-fil.</p>
+<p>Det krävs dessutom en shapefil, antingen med DESO-områden eller med kommuner, beroende på vilken geografisk aggreggering rapporten ska tas fram för. Detta används för att skapa en karta med den geografiska indelningen av det undersökta området. Om rapporten delas upp på DESO-områden, bör ett geopaket finnas som en .gpkg-fil (<em>DeSO_2018_v2.gpkg</em>). Om rapporten delas upp på kommunnivå, bör kartfiler finnas i en mapp med .shp-fil.</p>
 </div>
 <div id="krav-på-mappstruktur" class="section level3">
 <h3>Krav på mappstruktur</h3>
-<p>De tre .csv indatafilerna kan ligga antingen i samma mapp som skriptet eller i en annan mapp, men adressen behöver vara känd (det ska anges i skriptets förutsättningar).</p>
-<p>Om rapporten gäller en tätort eller kommun behöver DESO-shapefilen ligga in undermapp i indatamappen. Undermappen ska heta <em>deso_2018_v2</em> och ska innehålla den .gpkg-filen som beskrivits ovan. Det enklaste är att ladda ner den zippade filen från SCB<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> och packa upp den i indatamappen.</p>
-<p>Om rapporten gäller en region behöver kommun-shapefilen ligga i en undermapp till indatamappen. Undermappen ska heta <em>KommunSweref99TM</em> och innehålla .shp-filen <em>Kommun_Sweref99TM_region.shp</em>. Det enklaste är att ladda ner den zippade filen från SCB<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> och packa upp mappen <em>KommunSweref99TM.zip</em> i skriptets mapp.</p>
+<p>De tre .csv-indatafilerna kan ligga antingen i samma mapp som skriptet eller i en annan mapp, men adressen behöver vara känd (det ska anges i skriptets indata).</p>
+<p>Om rapporten gäller en tätort eller kommun, som är indelad på DeSO-nivå, behöver DeSO-shapefilen (<em>DeSO_2018_v2.gpkg</em>) laddas ned. Det enklaste är att ladda ner den zippade filen från SCB<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> och packa upp den i indatamappen.</p>
+<p>Om rapporten gäller en region uppdelad på kommuner, behöver kommun-shapefilen (<em>Kommun_Sweref99TM_region.shp</em>) laddas ned. Det enklaste är att ladda ner den zippade filen från SCB<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> och packa upp den i indatamappen.</p>
 <p>Resultatet av skriptet blir en PDF eller HTML-fil i samma mapp som skriptet.</p>
 </div>
 <div id="krav-på-paket" class="section level3">
@@ -225,22 +225,29 @@ pre code {
 <h3>Krav på indata i skriptet</h3>
 <p>I skriptet finns det några variabler som behöver specificeras innan körningen och möjliggör att skriptet kan användas i olika sammanhang och geografier samt att dataanalysen kan göras med olika förutsättningar. Alla dessa specificeringar görs i den del av koden som ligger i den R chunk som heter <em>indata</em>. Det ligger precis efter kodens <em>preamble</em> som används av LaTeX för att specificera dokumentets format.</p>
 <ul>
-<li><em>rapportomrade</em>: en vektor av en eller flera strängar som definierar rapportens intresseområde. Detta används i dataanalysen, t.ex. i filtreringar av datat. T.ex. “Uppsala län” eller c(“Bålsta”, “Bålsta Skärplinge”)</li>
-<li><em>rapportomrade_text</em>: en sträng som används i löptext när man refererar till rapportens intresseområde. T.ex. “Bålsta”</li>
-<li><em>rapportomrade_rubrik</em>: en sträng som används i rubriker (t.ex. i rapportens titel) när man refererar till rapportens intresseområde. T.ex. “Bålsta tätort”</li>
-<li><em>rapportniva</em>: en sträng som definierar rapportens geografiska avgränsningen. Tre möjliga värden finns, <em>tatort</em>, <em>kommun</em>, eller <em>lan</em>.</li>
-<li><em>omradesniva</em>: en sträng som definierar den geografiska indelningen som resultatet ska redovisas på. Två möjliga värden finns, <em>deso</em> eller <em>kommun</em>. Om rapportområdet är en region, bör <em>kommun</em> väljas och om det är en kommun eller tätort bör <em>deso</em> väljas.</li>
-<li><em>starttid</em>: ett 6-siffrigt heltal som definierar starttiden för filtreringen av data, i format YYYYMM</li>
-<li><em>sluttid</em>: ett 6-siffrigt heltal som definierar sluttiden för filtreringen av data, i format YYYYMM</li>
-<li><em>palett</em>: en vektor av sträng med HTML-färgkoder av olika färger som ska användas i diagramm. Vektorn behöver innehålla minst sex färger. T.ex. Region Uppsalas färgskala: c(“#5144d3”,“#53a17f”,“#3599d5”,“#e6ad00”,“#d57667”,“#9e1863”)</li>
-<li><em>table_api_address</em>: en sträng som definierar länk till SCB-tabell som ska användas för befolkningsmängd. “<a href="http://api.scb.se/OV0104/v1/doris/en/ssd/BE/BE0101/BE0101Y/FolkmDesoAldKonN" class="uri">http://api.scb.se/OV0104/v1/doris/en/ssd/BE/BE0101/BE0101Y/FolkmDesoAldKonN</a>” bör användas, då inläsningen av befolkningsmängden är hårdkodad för denna API.</li>
-<li><em>sokvag</em>: en sträng som definierar sökvägen till csv-indatafilerna. Lämnas strängen tom, används skriptets mapp som sökväg</li>
-<li><em>lagt_underlag</em>: en siffra som fungerar som gräns till vad som ska anses som lågt antal respondenter i dataanalysen. Alla resultat som baseras på antal respondenter under denna gräns kommer att markeras i rapporten.</li>
+<li><p><em>rapportomrade</em>: en vektor av en eller flera strängar som definierar rapportens intresseområde. Detta används i dataanalysen och namnet måste överrensstämma med det namn som används i indatatabellerna. T.ex. “Uppsala län” eller c(“Bålsta”, “Bålsta Skärplinge”)</p></li>
+<li><p><em>rapportomrade_text</em>: en sträng som används i löptext när man refererar till rapportens intresseområde. T.ex. “Bålsta”</p></li>
+<li><p><em>rapportomrade_rubrik</em>: en sträng som används i rubriker (t.ex. i rapportens titel) när man refererar till rapportens intresseområde. T.ex. “Bålsta tätort”</p></li>
+<li><p><em>rapportniva</em>: en sträng som definierar rapportens geografiska avgränsningen. Tre möjliga värden finns, <em>tatort</em>, <em>kommun</em>, eller <em>lan</em>.</p></li>
+<li><p><em>omradesniva</em>: en sträng som definierar den geografiska indelningen som resultatet ska redovisas på. Två möjliga värden finns, <em>deso</em> eller <em>kommun</em>. Om rapportområdet är en region, bör <em>kommun</em> väljas och om det är en kommun eller tätort bör <em>deso</em> väljas.</p></li>
+<li><p><em>starttid</em>: ett 6-siffrigt heltal som definierar starttiden för filtreringen av data, i format YYYYMM</p></li>
+<li><p><em>sluttid</em>: ett 6-siffrigt heltal som definierar sluttiden för filtreringen av data, i format YYYYMM</p></li>
+<li><p><em>table_api_address</em>: en sträng som definierar länk till SCB-tabell som ska användas för befolkningsmängd. “<a href="http://api.scb.se/OV0104/v1/doris/en/ssd/BE/BE0101/BE0101Y/FolkmDesoAldKonN" class="uri">http://api.scb.se/OV0104/v1/doris/en/ssd/BE/BE0101/BE0101Y/FolkmDesoAldKonN</a>” bör användas, då inläsningen av befolkningsmängden är hårdkodad för denna API.</p></li>
+<li><p><em>sokvag</em>: en sträng som definierar sökvägen till csv-indatafilerna. T.ex. <em>&quot;C:\Projekt\Bålsta\Indata</em>. Lämnas strängen tom, blir det möjligt att definiera övriga filnamn som absoluta sökvägar. Om strängen lämnas tom utan att absoluta sökvägar används för filnamnen, blir skriptets mapp sökväg.</p></li>
+<li><p><em>filnamn_rvu</em>: en sträng som tillsammans med <em>sokvag</em> pekar på csv-filen med resor. Kan även vara en undermapp till <em>sokvag</em>. T.ex. <em>“Indatafiler\rvu_håbo2021.csv”</em></p></li>
+<li><p><em>filnamn_pers</em>: en sträng som tillsammans med <em>sokvag</em> pekar på csv-filen med respondenter. Kan även vara en undermapp till <em>sokvag</em>. T.ex. <em>“Indatafiler\person_håbo2021.csv”</em></p></li>
+<li><p><em>filnamn_restid</em>: en sträng som tillsammans med <em>sokvag</em> pekar på csv-filen med restider. Kan även vara en undermapp till <em>sokvag</em>. T.ex. <em>“Indatafiler\restid_håbo2021.csv”</em></p></li>
+<li><p><em>filnamn_shape_tatort</em>: en sträng som tillsammans med <em>sokvag</em> pekar på shp-filen med delområden. Kan även vara en undermapp till <em>sokvag</em>. T.ex. <em>“Indatafiler\To2018_Swe99TM.shp”</em></p></li>
+<li><p><em>filnamn_shape_kommun</em>: en sträng som tillsammans med <em>sokvag</em> pekar på shp-filen med kommuner. Kan även vara en undermapp till <em>sokvag</em>. T.ex. <em>“KommunSweref99TM\Kommun_Sweref99TM_region.shp”</em></p></li>
+<li><p><em>lagt_underlag</em>: en siffra som fungerar som gräns till vad som ska anses som lågt antal respondenter i dataanalysen. Alla resultat som baseras på antal respondenter under denna gräns kommer att markeras i rapporten.</p></li>
+<li><p><em>ordning_fardmedel</em>: Vilken ordning som färdmedlen ska räknas upp. T.ex. <em>c(“Bil”,“Tåg”,“Buss”,“Cykel”,“Gång”,“Annat”)</em></p></li>
+<li><p><em>palett</em>: en vektor av sträng med HTML-färgkoder av olika färger som ska användas i diagramm. Vektorn behöver innehålla minst sex färger. Och används på för respektive färdmedel på samma position. T.ex. Region Uppsalas färgskala: <em>c(“#5144d3”,“#53a17f”,“#3599d5”,“#e6ad00”,“#d57667”,“#9e1863”)</em></p></li>
+<li><p><em>lagt_underlag</em>: Hur många områden som maximalt ska lyftas fram i texten vid uppräkning. Exempelvis om körkortsinnehavet är extremt högt i tre områden och lagt_underlag är satt till 2, då nämns bara topp två. Anges som ett positivt heltal.</p></li>
 </ul>
 </div>
 <div id="att-köra-verktyget" class="section level3">
 <h3>Att köra verktyget</h3>
-<p>För att köra verktyget krävs det att indatat uppdateras. Sedan ska användaren trycka på <em>Knit</em> i R-Studio. Som standard exporteras en PDF rapport. Det är dock också möjligt att välja HTML som format.</p>
+<p>För att köra verktyget krävs det att indatat uppdateras. Sedan ska användaren trycka på <em>Knit</em> i R-Studio. Som standard exporteras en PDF rapport. Det är dock också möjligt att välja HTML som format genom att trycka på pilen bredvid <em>Knit</em> i R-Studio och välja <em>Knit to HTML</em>.</p>
 </div>
 </div>
 <div class="footnotes">
