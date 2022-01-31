@@ -1,0 +1,15 @@
+test_report.Rmd
+test_report.log
+test_report.aux
+test_report.out
+test_report.pdf
+test_report.toc
+*.dbf
+*.prj
+*.shp
+*.shx
+*.cpg
+*.sbn
+*.sbx
+*.xml
+*.pdf
